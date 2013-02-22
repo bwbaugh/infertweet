@@ -30,7 +30,7 @@ def post_install():
     for resource in NLTK_DEPENDENCIES:
         if not nltk.download(resource):
             log.error('ERROR: Could not download required NLTK resource: '
-                      '{}'.format(resource))
+                      '{0}'.format(resource))
 
 
 setup(
@@ -43,7 +43,7 @@ setup(
 
     author="Wesley Baugh",
     author_email="wesley@bwbaugh.com",
-    url="http://www.github.com/bwbaugh/{}".format(PROGRAM_NAME),
+    url="http://www.github.com/bwbaugh/{0}".format(PROGRAM_NAME),
     description=DESCRIPTION,
     long_description=LONG_DESCRIPTION,
     license='Creative Commons Attribution-NonCommercial-ShareAlike 3.0 '
