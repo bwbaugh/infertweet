@@ -16,7 +16,7 @@ class TestQueueListener(object):
         for tweet in EXAMPLE_TWEETS:
             self.stream.on_data(tweet)
 
-    def test_iter(self):
+    def test_iterable(self):
         tweets = iter(self.stream)
         next(tweets)
 
@@ -26,7 +26,7 @@ class TestQueueListener(object):
             assert tweet.text
 
     def test_length(self):
-        assert len(self.stream) == 2
+        assert len(self.stream) == len(EXAMPLE_TWEETS)
 
     def test_on_data_limit(self):
         self.stream.on_data('{"limit":{"track":65}}')
