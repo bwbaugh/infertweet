@@ -1,6 +1,11 @@
 # Copyright (C) 2013 Wesley Baugh
+import ConfigParser
+import httplib
+import socket
+
+from mock import MagicMock
 from nose.tools import assert_raises
-from infertweet.twitter import Tweet, QueueListener, UnroutableError
+from infertweet.twitter import Tweet, QueueListener, UnroutableError, Stream
 
 
 EXAMPLE_TWEETS = r'''
@@ -12,30 +17,132 @@ EXAMPLE_TWEETS = EXAMPLE_TWEETS.strip().split('\n')
 
 class TestQueueListener(object):
     def setup(self):
-        self.stream = QueueListener()
-        for tweet in EXAMPLE_TWEETS:
-            self.stream.on_data(tweet)
+        self.listener = QueueListener()
+        send_listener(self.listener, EXAMPLE_TWEETS)
 
     def test_iterable(self):
-        tweets = iter(self.stream)
+        tweets = iter(self.listener)
         next(tweets)
 
     def test_parse_tweets(self):
-        for data in self.stream:
+        for data in self.listener:
             tweet = Tweet.parse(data)
             assert tweet.text
 
     def test_length(self):
-        assert len(self.stream) == len(EXAMPLE_TWEETS)
+        assert len(self.listener) == len(EXAMPLE_TWEETS)
 
     def test_on_data_limit(self):
-        self.stream.on_data('{"limit":{"track":65}}')
-        assert self.stream.limit_track == 65
+        self.listener.on_data('{"limit":{"track":47}}')
+        assert self.listener.limit_track == 47
 
     def test_on_data_unroutable(self):
-        assert_raises(UnroutableError, self.stream.on_data, '{"none": null}')
+        assert_raises(UnroutableError, self.listener.on_data, '{"none": null}')
 
     def test_maxsize(self):
-        self.stream = QueueListener(maxsize=1)
-        assert self.stream.on_data(EXAMPLE_TWEETS[0])
-        assert not self.stream.on_data(EXAMPLE_TWEETS[0])
+        self.listener = QueueListener(maxsize=1)
+        assert self.listener.on_data(EXAMPLE_TWEETS[0])
+        assert not self.listener.on_data(EXAMPLE_TWEETS[0])
+
+
+class TestStream(object):
+    def setup(self):
+        self.listener = QueueListener()
+        self.stream = Stream(self.listener, 'test', 'test', 'test', 'test')
+
+    def test_with_config(self):
+        config = ConfigParser.SafeConfigParser()
+        config.add_section('twitter')
+        config.set('twitter', 'consumer_key', 'test')
+        config.set('twitter', 'consumer_secret', 'test')
+        config.set('twitter', 'access_token', 'test')
+        config.set('twitter', 'access_token_secret', 'test')
+        self.stream = Stream(self.listener, config=config)
+
+    def test_missing_credentials(self):
+        assert_raises(ValueError, Stream, self.listener)
+
+    def test_run_tcpip_exceptions(self):
+        side_effects = [
+                        socket.error,
+                        httplib.HTTPException,
+                        KeyboardInterrupt,
+                       ]
+        mock = MagicMock(side_effect=side_effects)
+        self.stream._run(mock)
+        assert self.stream.tcpip_delay == 0.25 * (len(side_effects) - 1) + 0.25
+
+    def test_sample(self):
+        side_effects = [
+                        send_listener(self.listener, EXAMPLE_TWEETS),
+                        KeyboardInterrupt,
+                       ]
+        mock = MagicMock()
+        self.stream._stream = mock
+        self.stream._stream.sample = MagicMock(side_effect=side_effects)
+        self.stream.sample()
+        assert len(self.listener) == len(EXAMPLE_TWEETS)
+        expected = "[call.sample({}), call.disconnect(), call.sample({}), call.disconnect()]"
+        assert repr(mock.mock_calls) == expected
+
+    def test_sample_kwargs(self):
+        side_effects = [
+                        send_listener(self.listener, EXAMPLE_TWEETS),
+                        KeyboardInterrupt,
+                       ]
+        self.stream._stream.sample = MagicMock(side_effect=side_effects)
+        self.stream.sample(unreal_kwarg=47)
+        assert len(self.listener) == len(EXAMPLE_TWEETS)
+
+    def test_filter_follow(self):
+        side_effects = [
+                        send_listener(self.listener, EXAMPLE_TWEETS),
+                        KeyboardInterrupt,
+                       ]
+        self.stream._stream.filter = MagicMock(side_effect=side_effects)
+        self.stream.filter(follow=['user1', 'user2'])
+        assert len(self.listener) == len(EXAMPLE_TWEETS)
+
+    def test_filter_track(self):
+        side_effects = [
+                        send_listener(self.listener, EXAMPLE_TWEETS),
+                        KeyboardInterrupt,
+                       ]
+        self.stream._stream.filter = MagicMock(side_effect=side_effects)
+        self.stream.filter(track=['keyword1', 'kw2'])
+        assert len(self.listener) == len(EXAMPLE_TWEETS)
+
+    def test_filter_locations(self):
+        side_effects = [
+                        send_listener(self.listener, EXAMPLE_TWEETS),
+                        KeyboardInterrupt,
+                       ]
+        self.stream._stream.filter = MagicMock(side_effect=side_effects)
+        self.stream.filter(locations=[1, 2, 3, 4])
+        assert len(self.listener) == len(EXAMPLE_TWEETS)
+
+    def test_filter_multiple(self):
+        side_effects = [
+                        send_listener(self.listener, EXAMPLE_TWEETS),
+                        KeyboardInterrupt,
+                       ]
+        self.stream._stream.filter = MagicMock(side_effect=side_effects)
+        self.stream.filter(follow=['user1', 'user2'],
+                           track=['keyword1', 'kw2'],
+                           locations=[1, 2, 3, 4])
+        assert len(self.listener) == len(EXAMPLE_TWEETS)
+
+    def test_filter_kwargs(self):
+        side_effects = [
+                        send_listener(self.listener, EXAMPLE_TWEETS),
+                        KeyboardInterrupt,
+                       ]
+        self.stream._stream.filter = MagicMock(side_effect=side_effects)
+        self.stream.filter(track=['keyword1', 'kw2'],
+                           unreal_kwarg=47)
+        assert len(self.listener) == len(EXAMPLE_TWEETS)
+
+
+def send_listener(listener, tweets):
+    for tweet in tweets:
+        listener.on_data(tweet)
