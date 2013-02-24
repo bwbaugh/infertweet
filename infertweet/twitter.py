@@ -1,14 +1,14 @@
 # Copyright (C) 2013 Wesley Baugh
 """Tools needed to interact with Twitter."""
 import Queue
-from tweepy.api import API as _API
+from tweepy.api import API as tweepy_api
 from tweepy.models import Status
 from tweepy.streaming import StreamListener
 from tweepy.utils import import_simplejson
 json = import_simplejson()
 
 
-API = _API()
+_API = tweepy_api()
 
 
 class UnroutableError(ValueError):
@@ -18,7 +18,7 @@ class UnroutableError(ValueError):
 class QueueListener(StreamListener):
     """Tweets received from the stream are stored in an internal queue.
     Attributes:
-        queue: Queue object that incoming tweets put into.
+        queue: Queue object that incoming tweets are put into.
         num_handled: Total number of incoming tweets handled by this
             listener.
         limit_track: Number of tweets that were NOT sent by Twitter that
@@ -84,6 +84,6 @@ class QueueListener(StreamListener):
 
 class Tweet(Status):
     @classmethod
-    def parse(cls, data, api=API):
+    def parse(cls, data, api=_API):
         """Parse a JSON string into a Tweet / Status object."""
         return Status.parse(api, json.loads(data))
