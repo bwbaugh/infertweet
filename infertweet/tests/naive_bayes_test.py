@@ -39,8 +39,19 @@ class TestMultinomialNB(object):
         assert classifier.vocabulary == expected
 
     def test_train_not_tokenized(self):
+        # Nothing should change if there is an error with the training docs.
+        orig_label_count = self.classifier.label_count.copy()
+        orig_label_vocab = self.classifier.label_vocab.copy()
+        orig_label_token_count = self.classifier.label_token_count.copy()
+        orig_label_length = self.classifier.label_length.copy()
+
         document = ('one document not tokenized', 'label')
         assert_raises(TypeError, self.classifier.train, document)
+
+        assert orig_label_count == self.classifier.label_count
+        assert orig_label_vocab == self.classifier.label_vocab
+        assert orig_label_token_count == self.classifier.label_token_count
+        assert orig_label_length == self.classifier.label_length
 
     def test_labels(self):
         expected = set(['yes', 'no'])

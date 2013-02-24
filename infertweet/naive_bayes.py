@@ -47,10 +47,10 @@ class MultinomialNB(object):
                 class label.
         """
         for document, label in documents:
-            self.label_count[label] += 1
             # Python 3: isinstance(document, str)
             if isinstance(document, basestring):
                 raise TypeError('Documents must be a list of tokens')
+            self.label_count[label] += 1
             for token in document:
                 self.label_vocab[label].add(token)
                 self.label_token_count[label][token] += 1
