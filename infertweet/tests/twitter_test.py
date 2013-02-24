@@ -3,9 +3,10 @@ import ConfigParser
 import httplib
 import socket
 
-from mock import MagicMock
+from mock import MagicMock, call
 from nose.tools import assert_raises
-from infertweet.twitter import Tweet, QueueListener, UnroutableError, Stream
+from infertweet.twitter import (Tweet, QueueListener, UnroutableError,
+                                TwitterStreamError, Stream)
 
 
 EXAMPLE_TWEETS = r'''
@@ -36,8 +37,19 @@ class TestQueueListener(object):
         self.listener.on_data('{"limit":{"track":47}}')
         assert self.listener.limit_track == 47
 
+    def test_on_data_delete(self):
+        mock = MagicMock()
+        self.listener.on_delete = mock
+        self.listener.on_data('{"delete":{"status":{"id": 1, "user_id": 2}}}')
+        expected = [call(1, 2)]
+        calls = mock.mock_calls
+        assert calls == expected
+
     def test_on_data_unroutable(self):
         assert_raises(UnroutableError, self.listener.on_data, '{"none": null}')
+
+    def test_on_error(self):
+        assert_raises(TwitterStreamError, self.listener.on_error, 404)
 
     def test_maxsize(self):
         self.listener = QueueListener(maxsize=1)
@@ -72,6 +84,16 @@ class TestStream(object):
         self.stream._run(mock)
         assert self.stream.tcpip_delay == 0.25 * (len(side_effects) - 1) + 0.25
 
+    def test_run_twitter_stream_error(self):
+        side_effects = [
+                        TwitterStreamError(47),
+                       ]
+        mock = MagicMock(side_effect=side_effects)
+        self.stream._run(mock)
+        expected = [call()]
+        calls = mock.mock_calls
+        assert calls == expected
+
     def test_sample(self):
         side_effects = [
                         send_listener(self.listener, EXAMPLE_TWEETS),
@@ -82,17 +104,22 @@ class TestStream(object):
         self.stream._stream.sample = MagicMock(side_effect=side_effects)
         self.stream.sample()
         assert len(self.listener) == len(EXAMPLE_TWEETS)
-        expected = "[call.sample({}), call.disconnect(), call.sample({}), call.disconnect()]"
-        assert repr(mock.mock_calls) == expected
+        expected = [call.sample(), call.disconnect(), call.sample(), call.disconnect()]
+        calls = mock.mock_calls
+        assert calls == expected
 
     def test_sample_kwargs(self):
         side_effects = [
                         send_listener(self.listener, EXAMPLE_TWEETS),
                         KeyboardInterrupt,
                        ]
-        self.stream._stream.sample = MagicMock(side_effect=side_effects)
+        mock = MagicMock(side_effect=side_effects)
+        self.stream._stream.sample = mock
         self.stream.sample(unreal_kwarg=47)
         assert len(self.listener) == len(EXAMPLE_TWEETS)
+        expected = [call(unreal_kwarg=47)] * len(side_effects)
+        calls = mock.mock_calls
+        assert calls == expected
 
     def test_filter_follow(self):
         side_effects = [
@@ -137,10 +164,15 @@ class TestStream(object):
                         send_listener(self.listener, EXAMPLE_TWEETS),
                         KeyboardInterrupt,
                        ]
-        self.stream._stream.filter = MagicMock(side_effect=side_effects)
+        mock = MagicMock(side_effect=side_effects)
+        self.stream._stream.filter = mock
         self.stream.filter(track=['keyword1', 'kw2'],
                            unreal_kwarg=47)
         assert len(self.listener) == len(EXAMPLE_TWEETS)
+        expected = [call(track=['keyword1', 'kw2'], follow=None,
+                         unreal_kwarg=47, locations=None)] * len(side_effects)
+        calls = mock.mock_calls
+        assert calls == expected
 
 
 def send_listener(listener, tweets):

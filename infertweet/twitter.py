@@ -21,6 +21,10 @@ class UnroutableError(ValueError):
     pass
 
 
+class TwitterStreamError(Exception):
+    pass
+
+
 class QueueListener(StreamListener):
     """Tweets received from the stream are stored in an internal queue.
 
@@ -46,6 +50,9 @@ class QueueListener(StreamListener):
                 return False
         elif 'limit' in data_json:
             self.on_limit(data_json['limit']['track'])
+        elif 'delete' in data_json:
+            delete = data_json['delete']['status']
+            self.on_delete(delete['id'], delete['user_id'])
         else:
             raise UnroutableError('JSON string: """{0}"""'.format(data))
         return True
@@ -60,6 +67,9 @@ class QueueListener(StreamListener):
         except Queue.Full:
             return False
         self.num_handled += 1
+
+    def on_error(self, status_code):
+        raise TwitterStreamError('ERROR: {0}'.format(status_code))
 
     def on_limit(self, track):
         """Called when a limitation notice arrvies.
@@ -152,7 +162,7 @@ class Stream(object):
         while True:
             try:
                 self.running = True
-                endpoint(kwargs)  # Blocking!
+                endpoint(**kwargs)  # Blocking!
             except KeyboardInterrupt:
                 print 'KEYBOARD INTERRUPT'
                 return
@@ -161,6 +171,9 @@ class Stream(object):
                        '{0} seconds.'.format(self.tcpip_delay))
                 time.sleep(min(self.tcpip_delay, self.MAX_TCPIP_TIMEOUT))
                 self.tcpip_delay += 0.25
+            except TwitterStreamError as e:
+                print 'ERROR:', repr(e)
+                return
             finally:
                 print 'Disconnecting stream'
                 self._stream.disconnect()
