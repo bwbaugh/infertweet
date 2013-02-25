@@ -87,9 +87,27 @@ class TestMultinomialNB(object):
                   ('Chinese', 'no', Fraction(2, 9)),
                   ('Tokyo', 'no', Fraction(2, 9)),
                   ('Japan', 'no', Fraction(2, 9)),
+                  ('__invalid__', 'yes', Fraction(1, 14)),
+                  ('__invalid__', 'no', Fraction(1, 9)),
                 ]
         for token, label, prob in tests:
-            assert self.classifier.conditional(token, label) == prob
+            result = self.classifier.conditional(token, label)
+            assert result == prob
+
+    def test_conditional_laplace(self):
+        self.classifier.laplace = 2
+        tests = [
+                  ('Chinese', 'yes', Fraction(7, 20)),
+                  ('Japan', 'yes', Fraction(1, 10)),
+                  ('Chinese', 'no', Fraction(1, 5)),
+                  ('Tokyo', 'no', Fraction(1, 5)),
+                  ('Japan', 'no', Fraction(1, 5)),
+                  ('__invalid__', 'yes', Fraction(1, 10)),
+                  ('__invalid__', 'no', Fraction(2, 15)),
+                ]
+        for token, label, prob in tests:
+            result = self.classifier.conditional(token, label)
+            assert result == prob
 
     def test_score(self):
         tests = [

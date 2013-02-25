@@ -20,6 +20,7 @@ class MultinomialNB(object):
         Args:
             documents: Optional list of document-label pairs for training.
         """
+        self.laplace = 1
         self.label_vocab = defaultdict(set)
         self.label_count = defaultdict(int)
         self.label_length = defaultdict(int)
@@ -67,8 +68,8 @@ class MultinomialNB(object):
         # [laplace]: https://en.wikipedia.org/wiki/Additive_smoothing
 
         # Times token seen across all documents in a label.
-        numer = self.label_token_count[label][token] + 1
-        denom = self.label_length[label] + len(self.vocabulary)
+        numer = self.label_token_count[label][token] + self.laplace
+        denom = self.label_length[label] + (len(self.vocabulary) * self.laplace)
         return Fraction(numer, denom)
 
     def score(self, document, label):
