@@ -8,12 +8,9 @@ class MultinomialNB(object):
     """Multinomial Naive Bayes for text classification.
 
     Attributes:
-        label_vocab: Dictionary of sets of vocabulary by label.
-        label_count: Dictionary of times a label has been seen.
-        label_length: Dictionary of number of tokens seen in all
-            documents by label.
-        label_token_count: Dictionary of times a token has been seen by
-            label.
+        laplace: Smoothing parameter >= 0 (default=1).
+        labels: Set of all class labels.
+        vocabulary: Set of vocabulary across all class labels.
     """
     def __init__(self, *documents):
         """Create a new Multinomial Naive Bayes classifier.
@@ -21,22 +18,26 @@ class MultinomialNB(object):
             documents: Optional list of document-label pairs for training.
         """
         self.laplace = 1
-        self.label_vocab = defaultdict(set)
-        self.label_count = defaultdict(int)
-        self.label_length = defaultdict(int)
-        self.label_token_count = defaultdict(lambda: defaultdict(int))
+        # Dictionary of sets of vocabulary by label.
+        self._label_vocab = defaultdict(set)
+        # Dictionary of times a label has been seen.
+        self._label_count = defaultdict(int)
+        # Dictionary of number of tokens seen in all documents by label.
+        self._label_length = defaultdict(int)
+        # Dictionary of times a token has been seen by label.
+        self._label_token_count = defaultdict(lambda: defaultdict(int))
         if documents:
             self.train(*documents)
 
     @property
     def labels(self):
         """Set of all class labels."""
-        return set(label for label in self.label_count)
+        return set(label for label in self._label_count)
 
     @property
     def vocabulary(self):
-        """Vocabulary across all class labels."""
-        label_vocab = [self.label_vocab[x] for x in self.label_vocab]
+        """Set of vocabulary across all class labels."""
+        label_vocab = [self._label_vocab[x] for x in self._label_vocab]
         return set().union(*label_vocab)
 
     def train(self, *documents):
@@ -51,25 +52,33 @@ class MultinomialNB(object):
             # Python 3: isinstance(document, str)
             if isinstance(document, basestring):
                 raise TypeError('Documents must be a list of tokens')
-            self.label_count[label] += 1
+            self._label_count[label] += 1
             for token in document:
-                self.label_vocab[label].add(token)
-                self.label_token_count[label][token] += 1
-                self.label_length[label] += 1
+                self._label_vocab[label].add(token)
+                self._label_token_count[label][token] += 1
+                self._label_length[label] += 1
 
     def prior(self, label):
         """Prior probability of a label."""
-        total = sum(self.label_count[x] for x in self.label_count)
-        return Fraction(self.label_count[label], total)
+        if label not in self.labels:
+            raise KeyError(label)
+        total = sum(self._label_count[x] for x in self._label_count)
+        return Fraction(self._label_count[label], total)
 
     def conditional(self, token, label):
         """Conditional probability for a token given a label."""
         # Note we use [Laplace smoothing][laplace].
         # [laplace]: https://en.wikipedia.org/wiki/Additive_smoothing
+        if label not in self.labels:
+            raise KeyError(label)
 
         # Times token seen across all documents in a label.
-        numer = self.label_token_count[label][token] + self.laplace
-        denom = self.label_length[label] + (len(self.vocabulary) * self.laplace)
+        numer = self.laplace
+        # Avoid creating an entry if the term has never been seen
+        if token in self._label_token_count[label]:
+            numer += self._label_token_count[label][token]
+        denom = self._label_length[label] + (len(self.vocabulary) *
+                                             self.laplace)
         return Fraction(numer, denom)
 
     def score(self, document, label):
