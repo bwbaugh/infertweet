@@ -104,7 +104,7 @@ class Tweet(Status):
     @classmethod
     def parse(cls, data, api=_API):
         """Parse a JSON string into a Tweet / Status object."""
-        return Status.parse(api, json.loads(data))
+        return super(Tweet, cls).parse(api, json.loads(data))
 
 
 class Stream(object):
