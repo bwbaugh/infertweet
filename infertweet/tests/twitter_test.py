@@ -25,10 +25,9 @@ class TestQueueListener(object):
         tweets = iter(self.listener)
         next(tweets)
 
-    def test_parse_tweets(self):
-        for data in self.listener:
-            tweet = Tweet.parse(data)
-            assert tweet.text
+    def test_queue_empty(self):
+        for tweet in self.listener:
+            pass
 
     def test_length(self):
         assert len(self.listener) == len(EXAMPLE_TWEETS)
@@ -173,6 +172,14 @@ class TestStream(object):
                          unreal_kwarg=47, locations=None)] * len(side_effects)
         calls = mock.mock_calls
         assert calls == expected
+
+
+class TestTweet(object):
+    def test_parse_tweets(self):
+        for data in EXAMPLE_TWEETS:
+            tweet = Tweet.parse(data)
+            assert tweet.text
+            assert tweet.user.screen_name
 
 
 def send_listener(listener, tweets):
