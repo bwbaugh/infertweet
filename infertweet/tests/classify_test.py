@@ -208,7 +208,7 @@ class TestEvaluate(object):
                                    ('NN', 0.75),
                                    ('VB', 2 / 3)]
 
-    def test_evaluate_class_metrics(self):
+    def test_class_metrics(self):
         expected = []
         for label in self.labels:
             expected.append('f-{0}'.format(label))
@@ -305,13 +305,8 @@ class TestEvaluate(object):
         assert_almost_equal(result, (2.75 + (2 / 3)) / 5)
 
     def test_f_measure_weighted(self):
-        expected = [('DET', 1),
-                    ('IN', 1),
-                    ('JJ', 0),
-                    ('NN', 0.75),
-                    ('VB', 2 / 3)]
         expected = [(label, value * self.reference.count(label)) for
-                    label, value in expected]
+                    label, value in self.expected_f_measure]
         expected = sum(value for label, value in expected) / len(self.reference)
         result = self.performance['weighted f_measure']
         assert_almost_equal(result, expected)
