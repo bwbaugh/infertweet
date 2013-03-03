@@ -3,7 +3,7 @@ from copy import deepcopy
 from fractions import Fraction
 from nose.tools import assert_raises
 
-from infertweet.naive_bayes import MultinomialNB
+from infertweet.classify import MultinomialNB
 
 
 class TestMultinomialNB(object):

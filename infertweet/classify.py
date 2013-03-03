@@ -1,10 +1,16 @@
 # Copyright (C) 2013 Wesley Baugh
-"""Naive Bayes for text classification."""
+"""Tools for text classification."""
+import abc
 from collections import defaultdict
 from fractions import Fraction
 
 
-class MultinomialNB(object):
+class Classifier(object):
+    """Abstract base class for classifiers."""
+    __metaclass__ = abc.ABCMeta
+
+
+class MultinomialNB(Classifier):
     """Multinomial Naive Bayes for text classification.
 
     Attributes:
