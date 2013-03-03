@@ -192,6 +192,21 @@ class TestEvaluate(object):
         self.test = 'DET VB VB DET NN NN NN IN DET NN'.split()
         self.performance = evaluate(self.reference, self.test)
         self.labels = set(self.reference + self.test)
+        self.expected_recall = [('DET', 1),
+                                ('IN', 1),
+                                ('JJ', 0),
+                                ('NN', 0.75),
+                                ('VB', 1)]
+        self.expected_precision = [('DET', 1),
+                                   ('IN', 1),
+                                   ('JJ', 0),
+                                   ('NN', 0.75),
+                                   ('VB', 0.5)]
+        self.expected_f_measure = [('DET', 1),
+                                   ('IN', 1),
+                                   ('JJ', 0),
+                                   ('NN', 0.75),
+                                   ('VB', 2 / 3)]
 
     def test_evaluate_class_metrics(self):
         expected = []
@@ -220,13 +235,8 @@ class TestEvaluate(object):
         assert result == 0.8
 
     def test_recall_class(self):
-        expected = [('DET', 1),
-                    ('IN', 1),
-                    ('JJ', 0),
-                    ('NN', 0.75),
-                    ('VB', 1)]
         failed = []
-        for label, result in expected:
+        for label, result in self.expected_recall:
             computed = self.performance['recall-{0}'.format(label)]
             if computed != result:
                 failed.append((label, result, computed))
@@ -237,25 +247,15 @@ class TestEvaluate(object):
         assert_almost_equal(result, 0.75)
 
     def test_recall_weighted(self):
-        expected = [('DET', 1),
-                    ('IN', 1),
-                    ('JJ', 0),
-                    ('NN', 0.75),
-                    ('VB', 1)]
         expected = [(label, value * self.reference.count(label)) for
-                    label, value in expected]
+                    label, value in self.expected_recall]
         expected = sum(value for label, value in expected) / len(self.reference)
         result = self.performance['weighted recall']
         assert_almost_equal(result, expected)
 
     def test_precision_class(self):
-        expected = [('DET', 1),
-                    ('IN', 1),
-                    ('JJ', 0),
-                    ('NN', 0.75),
-                    ('VB', 0.5)]
         failed = []
-        for label, result in expected:
+        for label, result in self.expected_precision:
             computed = self.performance['precision-{0}'.format(label)]
             if computed != result:
                 failed.append((label, result, computed))
@@ -266,30 +266,38 @@ class TestEvaluate(object):
         assert_almost_equal(result, 0.65)
 
     def test_precision_weighted(self):
-        expected = [('DET', 1),
-                    ('IN', 1),
-                    ('JJ', 0),
-                    ('NN', 0.75),
-                    ('VB', 0.5)]
         expected = [(label, value * self.reference.count(label)) for
-                    label, value in expected]
+                    label, value in self.expected_precision]
         expected = sum(value for label, value in expected) / len(self.reference)
         result = self.performance['weighted precision']
         assert_almost_equal(result, expected)
 
     def test_f_measure_class(self):
-        expected = [('DET', 1),
-                    ('IN', 1),
-                    ('JJ', 0),
-                    ('NN', 0.75),
-                    ('VB', 2 / 3)]
         failed = []
-        for label, result in expected:
+        for label, result in self.expected_f_measure:
             computed = self.performance['f-{0}'.format(label)]
             try:
                 assert_almost_equal(computed, result)
             except AssertionError:
                 failed.append((label, result, computed))
+        assert not failed
+
+    def test_f_measure_beta(self):
+        failed = []
+        for beta in (0.5, 2):
+            for x, y in zip(self.expected_precision, self.expected_recall):
+                label, precision, recall = x[0], x[1], y[1]
+                performance = evaluate(self.reference, self.test, beta=beta)
+                result = performance['f-{0}'.format(label)]
+                if precision == 0 and recall == 0:
+                    expected = 0
+                else:
+                    expected = (((1 + beta ** 2) * precision * recall) /
+                                (((beta ** 2) * precision) + recall))
+                try:
+                    assert_almost_equal(result, expected)
+                except AssertionError:
+                    failed.append((label, beta, result, expected))
         assert not failed
 
     def test_f_measure_average(self):

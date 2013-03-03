@@ -121,12 +121,13 @@ class MultinomialNB(Classifier):
         return max(prob, key=prob.get)
 
 
-def evaluate(reference, test):
+def evaluate(reference, test, beta=1):
     """Compute various performance metrics.
 
     Args:
         reference: An ordered list of correct class labels.
         test: A corresponding ordered list of class labels to evaluate.
+        beta: A float parameter for F-measure (default = 1).
 
     Returns:
         A dictionary with an entry for each metric.
@@ -178,7 +179,7 @@ def evaluate(reference, test):
     performance['weighted precision'] = weighted_average / matrix._total
 
     # F-Measure
-    # (2 * recall * precision) / (recall + precision)
+    # ((1 + B ** 2) * precision * recall) / (((B ** 2) * precision) + recall)
     average = weighted_average = 0
     for label, index in matrix._indices.iteritems():
         recall = performance['recall-{0}'.format(label)]
@@ -187,7 +188,8 @@ def evaluate(reference, test):
         if recall == 0 or precision == 0:
             f_measure = 0
         else:
-            f_measure = (2 * recall * precision) / (recall + precision)
+            f_measure = (((1 + beta ** 2) * precision * recall) /
+                         (((beta ** 2) * precision) + recall))
         average += f_measure
         weighted_average += f_measure * total_positives
         key = 'f-{0}'.format(label)
