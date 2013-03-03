@@ -1,8 +1,12 @@
 # Copyright (C) 2013 Wesley Baugh
 """Tools for text classification."""
+from __future__ import division
+
 import abc
 from collections import defaultdict
 from fractions import Fraction
+
+import nltk
 
 
 class Classifier(object):
@@ -115,3 +119,80 @@ class MultinomialNB(Classifier):
         """Class label with maximum probability for a document."""
         prob = self.prob_all(document)
         return max(prob, key=prob.get)
+
+
+def evaluate(reference, test):
+    """Compute various performance metrics.
+
+    Args:
+        reference: An ordered list of correct class labels.
+        test: A corresponding ordered list of class labels to evaluate.
+
+    Returns:
+        A dictionary with an entry for each metric.
+    """
+    performance = dict()
+
+    # We can compute nearly everything from a confusion matrix.
+    matrix = nltk.confusionmatrix.ConfusionMatrix(reference, test)
+    performance['confusionmatrix'] = matrix
+
+    # Number of unique labels; used for computing averages.
+    num_labels = len(matrix._confusion)
+
+    # Accuracy
+    performance['accuracy'] = matrix._correct / matrix._total
+
+    # Recall
+    # correctly classified positives / total positives
+    average = weighted_average = 0
+    for label, index in matrix._indices.iteritems():
+        true_positive = matrix._confusion[index][index]
+        total_positives = sum(matrix._confusion[index])
+        recall = true_positive / total_positives
+        average += recall
+        weighted_average += recall * total_positives
+        key = 'recall-{0}'.format(label)
+        performance[key] = recall
+    performance['average recall'] = average / num_labels
+    performance['weighted recall'] = weighted_average / matrix._total
+
+    # Precision
+    # correctly classified positives / total predicted as positive
+    average = weighted_average = 0
+    for label, index in matrix._indices.iteritems():
+        true_positive = matrix._confusion[index][index]
+        total_positives = sum(matrix._confusion[index])
+        predicted_positive = 0  # Subtract true_positive to get false_positive
+        for i in xrange(num_labels):
+            predicted_positive += matrix._confusion[i][index]
+        if true_positive == 0 or predicted_positive == 0:
+            precision = 0
+        else:
+            precision = true_positive / predicted_positive
+        average += precision
+        weighted_average += precision * total_positives
+        key = 'precision-{0}'.format(label)
+        performance[key] = precision
+    performance['average precision'] = average / num_labels
+    performance['weighted precision'] = weighted_average / matrix._total
+
+    # F-Measure
+    # (2 * recall * precision) / (recall + precision)
+    average = weighted_average = 0
+    for label, index in matrix._indices.iteritems():
+        recall = performance['recall-{0}'.format(label)]
+        precision = performance['precision-{0}'.format(label)]
+        total_positives = sum(matrix._confusion[index])
+        if recall == 0 or precision == 0:
+            f_measure = 0
+        else:
+            f_measure = (2 * recall * precision) / (recall + precision)
+        average += f_measure
+        weighted_average += f_measure * total_positives
+        key = 'f-{0}'.format(label)
+        performance[key] = f_measure
+    performance['average f_measure'] = average / num_labels
+    performance['weighted f_measure'] = weighted_average / matrix._total
+
+    return performance
