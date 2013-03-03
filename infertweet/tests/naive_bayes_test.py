@@ -1,5 +1,4 @@
 # Copyright (C) 2013 Wesley Baugh
-# from copy import deepcopy
 from copy import deepcopy
 from fractions import Fraction
 from nose.tools import assert_raises
@@ -11,12 +10,10 @@ class TestMultinomialNB(object):
     # This test uses the examples provided by:
     # http://nlp.stanford.edu/IR-book/pdf/13bayes.pdf
     def setup(self):
-        self.training_docs = [
-                              ('Chinese Bejing Chinese', 'yes'),
+        self.training_docs = [('Chinese Bejing Chinese', 'yes'),
                               ('Chinese Chinese Shanghai', 'yes'),
                               ('Chinese Macao', 'yes'),
-                              ('Tokyo Japan Chinese', 'no'),
-                             ]
+                              ('Tokyo Japan Chinese', 'no')]
         self.training_docs = [(x.split(), y) for x, y in self.training_docs]
         self.classifier = MultinomialNB(*self.training_docs)
         self.make_snapshot()
@@ -24,7 +21,7 @@ class TestMultinomialNB(object):
     def make_snapshot(self):
         self.orig_label_count = deepcopy(self.classifier._label_count)
         self.orig_label_vocab = deepcopy(self.classifier._label_vocab)
-        self.orig_label_token_count = deepcopy(self.classifier \
+        self.orig_label_token_count = deepcopy(self.classifier
                                                ._label_token_count)
         self.orig_label_length = deepcopy(self.classifier._label_length)
 
@@ -72,21 +69,17 @@ class TestMultinomialNB(object):
         self.assert_snapshot_identical()
 
     def test_label_token_count(self):
-        tests = [
-                 ('yes', 'Chinese', 5),
+        tests = [('yes', 'Chinese', 5),
                  ('no', 'Chinese', 1),
-                 ('no', 'Japan', 1),
-                ]
+                 ('no', 'Japan', 1)]
         for label, token, count in tests:
             assert self.classifier._label_token_count[label][token] == count
         assert 'Japan' not in self.classifier._label_token_count['yes']
         self.assert_snapshot_identical()
 
     def test_prior(self):
-        tests = [
-                 ('yes', Fraction(3, 4)),
-                 ('no', Fraction(1, 4)),
-                ]
+        tests = [('yes', Fraction(3, 4)),
+                 ('no', Fraction(1, 4))]
         for label, prob in tests:
             assert self.classifier.prior(label) == prob
         self.assert_snapshot_identical()
@@ -96,15 +89,13 @@ class TestMultinomialNB(object):
         self.assert_snapshot_identical()
 
     def test_conditional(self):
-        tests = [
-                  ('Chinese', 'yes', Fraction(6, 14)),
-                  ('Japan', 'yes', Fraction(1, 14)),
-                  ('Chinese', 'no', Fraction(2, 9)),
-                  ('Tokyo', 'no', Fraction(2, 9)),
-                  ('Japan', 'no', Fraction(2, 9)),
-                  ('__invalid__', 'yes', Fraction(1, 14)),
-                  ('__invalid__', 'no', Fraction(1, 9)),
-                ]
+        tests = [('Chinese', 'yes', Fraction(6, 14)),
+                 ('Japan', 'yes', Fraction(1, 14)),
+                 ('Chinese', 'no', Fraction(2, 9)),
+                 ('Tokyo', 'no', Fraction(2, 9)),
+                 ('Japan', 'no', Fraction(2, 9)),
+                 ('__invalid__', 'yes', Fraction(1, 14)),
+                 ('__invalid__', 'no', Fraction(1, 9))]
         for token, label, prob in tests:
             result = self.classifier.conditional(token, label)
             assert result == prob
@@ -112,15 +103,13 @@ class TestMultinomialNB(object):
 
     def test_conditional_laplace(self):
         self.classifier.laplace = 2
-        tests = [
-                  ('Chinese', 'yes', Fraction(7, 20)),
-                  ('Japan', 'yes', Fraction(1, 10)),
-                  ('Chinese', 'no', Fraction(1, 5)),
-                  ('Tokyo', 'no', Fraction(1, 5)),
-                  ('Japan', 'no', Fraction(1, 5)),
-                  ('__invalid__', 'yes', Fraction(1, 10)),
-                  ('__invalid__', 'no', Fraction(2, 15)),
-                ]
+        tests = [('Chinese', 'yes', Fraction(7, 20)),
+                 ('Japan', 'yes', Fraction(1, 10)),
+                 ('Chinese', 'no', Fraction(1, 5)),
+                 ('Tokyo', 'no', Fraction(1, 5)),
+                 ('Japan', 'no', Fraction(1, 5)),
+                 ('__invalid__', 'yes', Fraction(1, 10)),
+                 ('__invalid__', 'no', Fraction(2, 15))]
         for token, label, prob in tests:
             result = self.classifier.conditional(token, label)
             assert result == prob
@@ -138,14 +127,12 @@ class TestMultinomialNB(object):
         self.assert_snapshot_identical()
 
     def test_score(self):
-        tests = [
-                 ('Chinese Chinese Chinese Tokyo Japan', 'yes',
+        tests = [('Chinese Chinese Chinese Tokyo Japan', 'yes',
                   Fraction(3, 4) * Fraction(3, 7) * Fraction(3, 7) *
                   Fraction(3, 7) * Fraction(1, 14) * Fraction(1, 14)),
                  ('Chinese Chinese Chinese Tokyo Japan', 'no',
                   Fraction(1, 4) * Fraction(2, 9) * Fraction(2, 9) *
-                  Fraction(2, 9) * Fraction(2, 9) * Fraction(2, 9)),
-                ]
+                  Fraction(2, 9) * Fraction(2, 9) * Fraction(2, 9))]
         for document, label, score in tests:
             result = self.classifier.score(document.split(), label)
             assert result == score
@@ -157,12 +144,10 @@ class TestMultinomialNB(object):
         self.assert_snapshot_identical()
 
     def test_prob(self):
-        tests = [
-                 ('Chinese Chinese Chinese Tokyo Japan', 'yes',
+        tests = [('Chinese Chinese Chinese Tokyo Japan', 'yes',
                   Fraction(4782969, 6934265)),
                  ('Chinese Chinese Chinese Tokyo Japan', 'no',
-                  Fraction(2151296, 6934265)),
-                ]
+                  Fraction(2151296, 6934265))]
         for document, label, prob in tests:
             result = self.classifier.prob(document.split(), label)
             assert result == prob
@@ -176,10 +161,8 @@ class TestMultinomialNB(object):
     def test_prob_all(self):
         document = 'Chinese Chinese Chinese Tokyo Japan'
         prob_all = self.classifier.prob_all(document.split())
-        tests = [
-                 ('yes', Fraction(4782969, 6934265)),
-                 ('no', Fraction(2151296, 6934265)),
-                ]
+        tests = [('yes', Fraction(4782969, 6934265)),
+                 ('no', Fraction(2151296, 6934265))]
         for label, prob in tests:
             assert prob_all[label] == prob
         self.assert_snapshot_identical()
