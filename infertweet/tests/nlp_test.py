@@ -48,7 +48,7 @@ class TestFeatureExtractor(object):
         assert not failed
 
     def test_ngrams_multinomialnb(self):
-        """Integration test with Naive Bayes classifier."""
+        # Integration test with Naive Bayes classifier.
         classifier = MultinomialNB()
         self.extractor.min_n, self.extractor.max_n = 1, 3
         features = self.extractor.extract(self.document)
