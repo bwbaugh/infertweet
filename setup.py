@@ -13,9 +13,7 @@ with open('requirements.txt') as f:
     REQUIREMENTS = f.read()
 with open('README.md') as f:
     LONG_DESCRIPTION = f.read()
-NLTK_DEPENDENCIES = [
-                     # None yet.
-                    ]
+NLTK_DEPENDENCIES = []  # None yet.
 
 
 class InstallWithPostCommand(install):
@@ -48,8 +46,7 @@ setup(
     long_description=LONG_DESCRIPTION,
     license='Creative Commons Attribution-NonCommercial-ShareAlike 3.0 '
             'Unported License',
-    classifiers=[
-                 "Intended Audience :: Developers",
+    classifiers=["Intended Audience :: Developers",
                  "Intended Audience :: Science/Research",
                  "Natural Language :: English",
                  "Programming Language :: Python",
@@ -59,6 +56,5 @@ setup(
                  "Topic :: Scientific/Engineering :: Artificial Intelligence",
                  "Topic :: Scientific/Engineering :: Information Analysis",
                  "Topic :: Software Development :: Libraries :: Python Modules",
-                 "opic :: Text Processing :: Linguistic",
-                ],
+                 "Topic :: Text Processing :: Linguistic"],
 )
