@@ -3,6 +3,7 @@
 
 # Packages
 *.egg-info/
+build/
 dist/
 
 # Unit test / coverage reports
