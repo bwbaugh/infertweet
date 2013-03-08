@@ -21,6 +21,9 @@ class TestMultinomialNB(object):
         self.classifier = MultinomialNB(*self.training_docs)
         self.make_snapshot()
 
+    def teardown(self):
+        self.assert_snapshot_identical()
+
     def make_snapshot(self):
         self.orig_label_count = deepcopy(self.classifier._label_count)
         self.orig_label_vocab = deepcopy(self.classifier._label_vocab)
@@ -58,18 +61,15 @@ class TestMultinomialNB(object):
     def test_train_not_tokenized(self):
         document = ('one document not tokenized', 'label')
         assert_raises(TypeError, self.classifier.train, document)
-        self.assert_snapshot_identical()
 
     def test_labels(self):
         expected = set(['yes', 'no'])
         assert self.classifier.labels == expected
-        self.assert_snapshot_identical()
 
     def test_vocabulary(self):
         expected = set(['Chinese', 'Bejing', 'Shanghai', 'Macao', 'Tokyo',
                         'Japan'])
         assert self.classifier.vocabulary == expected
-        self.assert_snapshot_identical()
 
     def test_vocab_size(self):
         actual = len(self.classifier.vocabulary)
@@ -83,7 +83,6 @@ class TestMultinomialNB(object):
         for label, token, count in tests:
             assert self.classifier._label_token_count[label][token] == count
         assert 'Japan' not in self.classifier._label_token_count['yes']
-        self.assert_snapshot_identical()
 
     def test_prior(self):
         tests = [('yes', Fraction(3, 4)),
@@ -97,11 +96,9 @@ class TestMultinomialNB(object):
             result = self.classifier.prior(label)
             prob = float(prob)
             assert_almost_equal(result, prob)
-        self.assert_snapshot_identical()
 
     def test_prior_unseen_label(self):
         assert_raises(KeyError, self.classifier.prior, '__unseen__')
-        self.assert_snapshot_identical()
 
     def test_conditional(self):
         tests = [('Chinese', 'yes', Fraction(6, 14)),
@@ -120,7 +117,6 @@ class TestMultinomialNB(object):
             result = self.classifier.conditional(token, label)
             prob = float(prob)
             assert_almost_equal(result, prob)
-        self.assert_snapshot_identical()
 
     def test_conditional_laplace(self):
         self.classifier.laplace = 2
@@ -140,18 +136,15 @@ class TestMultinomialNB(object):
             result = self.classifier.conditional(token, label)
             prob = float(prob)
             assert_almost_equal(result, prob)
-        self.assert_snapshot_identical()
 
     def test_conditional_unseen_token(self):
         self.classifier.conditional('__unseen__', 'yes')
         assert '__unseen__' not in self.classifier._label_token_count['yes']
-        self.assert_snapshot_identical()
 
     def test_conditional_unseen_label(self):
         assert_raises(KeyError, self.classifier.conditional, '__unseen__',
                       '__unseen__')
         assert '__unseen__' not in self.classifier._label_token_count
-        self.assert_snapshot_identical()
 
     def test_score(self):
         tests = [('Chinese Chinese Chinese Tokyo Japan', 'yes',
@@ -170,12 +163,10 @@ class TestMultinomialNB(object):
             result = math.exp(result)
             score = float(score)
             assert_almost_equal(result, score)
-        self.assert_snapshot_identical()
 
     def test_score_not_tokenized(self):
         document, label = 'Chinese Chinese Chinese Tokyo Japan', 'yes'
         assert_raises(TypeError, self.classifier._score, document, label)
-        self.assert_snapshot_identical()
 
     def test_prob(self):
         tests = [('Chinese Chinese Chinese Tokyo Japan', 'yes',
@@ -191,12 +182,10 @@ class TestMultinomialNB(object):
             result = self.classifier.prob(document.split(), label)
             prob = float(prob)
             assert_almost_equal(result, prob)
-        self.assert_snapshot_identical()
 
     def test_prob_not_tokenized(self):
         document, label = 'Chinese Chinese Chinese Tokyo Japan', 'yes'
         assert_raises(TypeError, self.classifier.prob, document, label)
-        self.assert_snapshot_identical()
 
     def test_prob_all(self):
         document = 'Chinese Chinese Chinese Tokyo Japan'
@@ -211,30 +200,25 @@ class TestMultinomialNB(object):
             prob_all = self.classifier.prob_all(document.split())
             prob = float(prob)
             assert_almost_equal(prob_all[label], prob)
-        self.assert_snapshot_identical()
 
     def test_prob_all_not_tokenized(self):
         document = 'Chinese Chinese Chinese Tokyo Japan'
         assert_raises(TypeError, self.classifier.prob_all, document)
-        self.assert_snapshot_identical()
 
     def test_prob_all_near_zero(self):
         # Issue gh-14.
         document = 'Chinese Chinese Chinese Tokyo Japan ' * 1000
         self.classifier.exact = False
         self.classifier.prob_all(document.split())
-        self.assert_snapshot_identical()
 
     def test_classify(self):
         document = 'Chinese Chinese Chinese Tokyo Japan'.split()
         label = self.classifier.classify(document)
         assert label == 'yes'
-        self.assert_snapshot_identical()
 
     def test_classify_not_tokenized(self):
         document = 'Chinese Chinese Chinese Tokyo Japan'
         assert_raises(TypeError, self.classifier.classify, document)
-        self.assert_snapshot_identical()
 
 
 class TestEvaluate(object):
