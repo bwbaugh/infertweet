@@ -36,6 +36,8 @@ class MultinomialNB(Classifier):
         self._label_length = defaultdict(int)
         # Dictionary of times a token has been seen by label.
         self._label_token_count = defaultdict(lambda: defaultdict(int))
+        # Size of vocabulary across all class labels.
+        self._vocab_size = 0
         if documents:
             self.train(*documents)
 
@@ -64,6 +66,9 @@ class MultinomialNB(Classifier):
                 raise TypeError('Documents must be a list of tokens')
             self._label_count[label] += 1
             for token in document:
+                # Check if the token hasn't been seen before for any label.
+                if not any(token in self._label_vocab[x] for x in self.labels):
+                    self._vocab_size += 1
                 self._label_vocab[label].add(token)
                 self._label_token_count[label][token] += 1
                 self._label_length[label] += 1
@@ -87,7 +92,7 @@ class MultinomialNB(Classifier):
         # Avoid creating an entry if the term has never been seen
         if token in self._label_token_count[label]:
             numer += self._label_token_count[label][token]
-        denom = self._label_length[label] + (len(self.vocabulary) *
+        denom = self._label_length[label] + (self._vocab_size *
                                              self.laplace)
         return Fraction(numer, denom)
 

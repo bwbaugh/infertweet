@@ -70,6 +70,11 @@ class TestMultinomialNB(object):
         assert self.classifier.vocabulary == expected
         self.assert_snapshot_identical()
 
+    def test_vocab_size(self):
+        actual = len(self.classifier.vocabulary)
+        result = self.classifier._vocab_size
+        assert actual == result
+
     def test_label_token_count(self):
         tests = [('yes', 'Chinese', 5),
                  ('no', 'Chinese', 1),
