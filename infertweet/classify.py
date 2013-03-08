@@ -123,10 +123,7 @@ class MultinomialNB(Classifier):
             else:
                 score += math.log(conditional)
 
-        if self.exact:
-            return score
-        else:
-            return math.exp(score)
+        return score
 
     def _compute_scores(self, document):
         """Compute the multinomial score of a document for all labels."""
@@ -135,7 +132,14 @@ class MultinomialNB(Classifier):
     def prob_all(self, document):
         """Probability of a document for all labels."""
         score = self._compute_scores(document)
+        if not self.exact:
+            # If the log-likelihood is too small, when we convert back
+            # using `math.exp`, the result will round to zero.
+            normalize = max(score.itervalues())
+            assert normalize <= 0, normalize
+            score = {x: math.exp(score[x] - normalize) for x in score}
         total = sum(score[x] for x in score)
+        assert total > 0, (total, score, normalize)
         if self.exact:
             return {label: Fraction(score[label], total) for label in
                     self.labels}

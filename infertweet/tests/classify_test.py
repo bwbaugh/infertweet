@@ -1,6 +1,7 @@
 # Copyright (C) 2013 Wesley Baugh
 from __future__ import division
 
+import math
 from copy import deepcopy
 from fractions import Fraction
 from nose.tools import assert_raises, assert_almost_equal
@@ -166,6 +167,7 @@ class TestMultinomialNB(object):
 
             self.classifier.exact = False
             result = self.classifier._score(document.split(), label)
+            result = math.exp(result)
             score = float(score)
             assert_almost_equal(result, score)
         self.assert_snapshot_identical()
@@ -214,6 +216,13 @@ class TestMultinomialNB(object):
     def test_prob_all_not_tokenized(self):
         document = 'Chinese Chinese Chinese Tokyo Japan'
         assert_raises(TypeError, self.classifier.prob_all, document)
+        self.assert_snapshot_identical()
+
+    def test_prob_all_near_zero(self):
+        # Issue gh-14.
+        document = 'Chinese Chinese Chinese Tokyo Japan ' * 1000
+        self.classifier.exact = False
+        self.classifier.prob_all(document.split())
         self.assert_snapshot_identical()
 
     def test_classify(self):
