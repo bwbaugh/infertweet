@@ -3,6 +3,7 @@
 from __future__ import division
 
 import abc
+import math
 from collections import defaultdict
 from fractions import Fraction
 
@@ -18,7 +19,10 @@ class MultinomialNB(Classifier):
     """Multinomial Naive Bayes for text classification.
 
     Attributes:
-        laplace: Smoothing parameter >= 0 (default=1).
+        laplace: Smoothing parameter >= 0. (default 1)
+        exact: Boolean indicating if exact probabilities should be
+            returned as a `Fraction`. Otherwise, speed up computations
+            but only return probabilities as a `float`. (default False)
         labels: Set of all class labels.
         vocabulary: Set of vocabulary across all class labels.
     """
@@ -28,6 +32,7 @@ class MultinomialNB(Classifier):
             documents: Optional list of document-label pairs for training.
         """
         self.laplace = 1
+        self.exact = False
         # Dictionary of sets of vocabulary by label.
         self._label_vocab = defaultdict(set)
         # Dictionary of times a label has been seen.
@@ -78,7 +83,10 @@ class MultinomialNB(Classifier):
         if label not in self.labels:
             raise KeyError(label)
         total = sum(self._label_count[x] for x in self._label_count)
-        return Fraction(self._label_count[label], total)
+        if self.exact:
+            return Fraction(self._label_count[label], total)
+        else:
+            return self._label_count[label] / total
 
     def conditional(self, token, label):
         """Conditional probability for a token given a label."""
@@ -92,28 +100,47 @@ class MultinomialNB(Classifier):
         # Avoid creating an entry if the term has never been seen
         if token in self._label_token_count[label]:
             numer += self._label_token_count[label][token]
-        denom = self._label_length[label] + (self._vocab_size *
-                                             self.laplace)
-        return Fraction(numer, denom)
+        denom = self._label_length[label] + (self._vocab_size * self.laplace)
+        if self.exact:
+            return Fraction(numer, denom)
+        else:
+            return numer / denom
 
-    def score(self, document, label):
-        """Multinomial score of a document given a label."""
+    def _score(self, document, label):
+        """Multinomial raw score of a document given a label."""
         if isinstance(document, basestring):
             raise TypeError('Documents must be a list of tokens')
-        score = self.prior(label)
+
+        if self.exact:
+            score = self.prior(label)
+        else:
+            score = math.log(self.prior(label))
+
         for token in document:
-            score *= self.conditional(token, label)
-        return score
+            conditional = self.conditional(token, label)
+            if self.exact:
+                score *= conditional
+            else:
+                score += math.log(conditional)
+
+        if self.exact:
+            return score
+        else:
+            return math.exp(score)
 
     def _compute_scores(self, document):
         """Compute the multinomial score of a document for all labels."""
-        return {x: self.score(document, x) for x in self.labels}
+        return {x: self._score(document, x) for x in self.labels}
 
     def prob_all(self, document):
         """Probability of a document for all labels."""
         score = self._compute_scores(document)
         total = sum(score[x] for x in score)
-        return {label: Fraction(score[label], total) for label in self.labels}
+        if self.exact:
+            return {label: Fraction(score[label], total) for label in
+                    self.labels}
+        else:
+            return {label: score[label] / total for label in self.labels}
 
     def prob(self, document, label):
         """Probability of a document given a label."""

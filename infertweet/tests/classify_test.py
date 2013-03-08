@@ -88,7 +88,14 @@ class TestMultinomialNB(object):
         tests = [('yes', Fraction(3, 4)),
                  ('no', Fraction(1, 4))]
         for label, prob in tests:
-            assert self.classifier.prior(label) == prob
+            self.classifier.exact = True
+            result = self.classifier.prior(label)
+            assert result == prob
+
+            self.classifier.exact = False
+            result = self.classifier.prior(label)
+            prob = float(prob)
+            assert_almost_equal(result, prob)
         self.assert_snapshot_identical()
 
     def test_prior_unseen_label(self):
@@ -104,8 +111,14 @@ class TestMultinomialNB(object):
                  ('__invalid__', 'yes', Fraction(1, 14)),
                  ('__invalid__', 'no', Fraction(1, 9))]
         for token, label, prob in tests:
+            self.classifier.exact = True
             result = self.classifier.conditional(token, label)
             assert result == prob
+
+            self.classifier.exact = False
+            result = self.classifier.conditional(token, label)
+            prob = float(prob)
+            assert_almost_equal(result, prob)
         self.assert_snapshot_identical()
 
     def test_conditional_laplace(self):
@@ -118,8 +131,14 @@ class TestMultinomialNB(object):
                  ('__invalid__', 'yes', Fraction(1, 10)),
                  ('__invalid__', 'no', Fraction(2, 15))]
         for token, label, prob in tests:
+            self.classifier.exact = True
             result = self.classifier.conditional(token, label)
             assert result == prob
+
+            self.classifier.exact = False
+            result = self.classifier.conditional(token, label)
+            prob = float(prob)
+            assert_almost_equal(result, prob)
         self.assert_snapshot_identical()
 
     def test_conditional_unseen_token(self):
@@ -141,13 +160,19 @@ class TestMultinomialNB(object):
                   Fraction(1, 4) * Fraction(2, 9) * Fraction(2, 9) *
                   Fraction(2, 9) * Fraction(2, 9) * Fraction(2, 9))]
         for document, label, score in tests:
-            result = self.classifier.score(document.split(), label)
+            self.classifier.exact = True
+            result = self.classifier._score(document.split(), label)
             assert result == score
+
+            self.classifier.exact = False
+            result = self.classifier._score(document.split(), label)
+            score = float(score)
+            assert_almost_equal(result, score)
         self.assert_snapshot_identical()
 
     def test_score_not_tokenized(self):
         document, label = 'Chinese Chinese Chinese Tokyo Japan', 'yes'
-        assert_raises(TypeError, self.classifier.score, document, label)
+        assert_raises(TypeError, self.classifier._score, document, label)
         self.assert_snapshot_identical()
 
     def test_prob(self):
@@ -156,8 +181,14 @@ class TestMultinomialNB(object):
                  ('Chinese Chinese Chinese Tokyo Japan', 'no',
                   Fraction(2151296, 6934265))]
         for document, label, prob in tests:
+            self.classifier.exact = True
             result = self.classifier.prob(document.split(), label)
             assert result == prob
+
+            self.classifier.exact = False
+            result = self.classifier.prob(document.split(), label)
+            prob = float(prob)
+            assert_almost_equal(result, prob)
         self.assert_snapshot_identical()
 
     def test_prob_not_tokenized(self):
@@ -167,11 +198,17 @@ class TestMultinomialNB(object):
 
     def test_prob_all(self):
         document = 'Chinese Chinese Chinese Tokyo Japan'
-        prob_all = self.classifier.prob_all(document.split())
         tests = [('yes', Fraction(4782969, 6934265)),
                  ('no', Fraction(2151296, 6934265))]
         for label, prob in tests:
+            self.classifier.exact = True
+            prob_all = self.classifier.prob_all(document.split())
             assert prob_all[label] == prob
+
+            self.classifier.exact = False
+            prob_all = self.classifier.prob_all(document.split())
+            prob = float(prob)
+            assert_almost_equal(prob_all[label], prob)
         self.assert_snapshot_identical()
 
     def test_prob_all_not_tokenized(self):
