@@ -3,7 +3,10 @@
 
 For more information visit <http://www.cs.york.ac.uk/semeval-2013/task2/>.
 """
+import ast
 from collections import namedtuple
+
+from unidecode import unidecode
 
 
 def task_b_generator(dataset_file):
@@ -15,18 +18,25 @@ def task_b_generator(dataset_file):
 
     Returns:
         LabeledTweet (a namedtuple) with the following attributes:
-            - sid
-            - uid
-            - label
-            - text
+            - sid: String.
+            - uid: String.
+            - label: String in ['positive', 'negative', 'neutral'] or None.
+            - text: String.
     """
     for line in dataset_file:
         LabeledTweet = namedtuple('LabeledTweet', 'sid uid label text')
         line = line.rstrip('\n').split('\t')
-        # Fix the `label` field.
-        line[2] = line[2].strip('"')
-        if line[2] == 'objective-OR-neutral' or line[2] == 'objective':
-            line[2] = 'neutral'
-        # Only yield if the tweet was downloaded from Twitter.
-        if line[3] != 'Not Available':
-            yield LabeledTweet(*line)
+        sid, uid, label, text = line
+        label = label.strip('"')
+        if label == 'objective-OR-neutral' or label == 'objective':
+            label = 'neutral'
+        if label == 'unknwn':
+            label = None
+        # Text might be in the python style `repr()` encoding.
+        try:
+            text = ast.literal_eval(''.join(['u"', text, '"']))
+        except SyntaxError:
+            pass
+        text = unidecode(text)
+        if text != 'Not Available':
+            yield LabeledTweet(sid, uid, label, text)

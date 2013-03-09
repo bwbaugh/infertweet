@@ -1,3 +1,4 @@
 tweepy>=2.0
 nltk>=2.0.3
 PyYAML>=3.09
+Unidecode>=0.04.12
