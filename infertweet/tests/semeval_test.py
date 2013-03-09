@@ -1,6 +1,7 @@
 # Copyright (C) 2013 Wesley Baugh
 import ast
 
+from nose.tools import assert_almost_equal
 from unidecode import unidecode
 
 from infertweet import semeval as s
@@ -68,3 +69,12 @@ class TestTaskBGenerator(object):
                               in EXAMPLE_DATA)
         expected = len(EXAMPLE_DATA) - num_unavailable
         assert count == expected
+
+    def test_semeval_f_measure(self):
+        gs = ("positive neutral neutral positive negative positive negative "
+              "neutral neutral positive").split()
+        pred = ("positive positive neutral positive positive positive negative "
+                "positive neutral positive").split()
+        performance = s.evaluate(gs, pred)
+        result = performance['semeval f_measure']
+        assert_almost_equal(result, 0.6970, 4)

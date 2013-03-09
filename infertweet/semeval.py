@@ -8,6 +8,8 @@ from collections import namedtuple
 
 from unidecode import unidecode
 
+from infertweet import classify
+
 
 def task_b_generator(dataset_file):
     """Parses the Task B dataset and yields LabeledTweet tuples.
@@ -40,3 +42,22 @@ def task_b_generator(dataset_file):
         text = unidecode(text)
         if text != 'Not Available':
             yield LabeledTweet(sid, uid, label, text)
+
+
+def evaluate(reference, test, beta=1):
+    """Compute score for SemEval and various performance metrics.
+
+    Args:
+        reference: An ordered list of correct class labels.
+        test: A corresponding ordered list of class labels to evaluate.
+        beta: A float parameter for F-measure (default = 1).
+
+    Returns:
+        A dictionary with an entry for each metric. An additional entry
+        is made with the key 'semeval f_measure', which is the
+        performance metric used by SemEval-2013.
+    """
+    performance = classify.evaluate(reference, test, beta)
+    semeval = (performance['f-positive'] + performance['f-negative']) / 2
+    performance['semeval f_measure'] = semeval
+    return performance
