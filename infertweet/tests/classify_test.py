@@ -223,25 +223,31 @@ class TestMultinomialNB(object):
 
 class TestEvaluate(object):
     def setup(self):
-        self.reference = 'DET NN VB DET JJ NN NN IN DET NN'.split()
-        self.test = 'DET VB VB DET NN NN NN IN DET NN'.split()
+        self.reference = 'DET NN VB DET JJ NN NN IN DET NN zero'.split()
+        self.test = 'DET VB VB DET NN NN NN IN DET NN unseen'.split()
         self.performance = evaluate(self.reference, self.test)
         self.labels = set(self.reference + self.test)
         self.expected_recall = [('DET', 1),
                                 ('IN', 1),
                                 ('JJ', 0),
                                 ('NN', 0.75),
-                                ('VB', 1)]
+                                ('VB', 1),
+                                ('zero', 0),
+                                ('unseen', 1)]
         self.expected_precision = [('DET', 1),
                                    ('IN', 1),
-                                   ('JJ', 0),
+                                   ('JJ', 1),
                                    ('NN', 0.75),
-                                   ('VB', 0.5)]
+                                   ('VB', 0.5),
+                                   ('zero', 1),
+                                   ('unseen', 0)]
         self.expected_f_measure = [('DET', 1),
                                    ('IN', 1),
                                    ('JJ', 0),
                                    ('NN', 0.75),
-                                   ('VB', 2 / 3)]
+                                   ('VB', 2 / 3),
+                                   ('zero', 0),
+                                   ('unseen', 0)]
 
     def test_class_metrics(self):
         expected = []
@@ -258,16 +264,28 @@ class TestEvaluate(object):
     def test_confusion_matrix(self):
         confusion = self.performance['confusionmatrix']
         result = confusion.pp()
-        expected = ('    | D         |\n    | E I J N V |\n    | T N J '
-                    'N B |\n----+-----------+\nDET |<3>. . . . |\n IN |'
-                    ' .<1>. . . |\n JJ | . .<.>1 . |\n NN | . . .<3>1 |'
-                    '\n VB | . . . .<1>|\n----+-----------+\n(row = ref'
-                    'erence; col = test)\n')
+        expected = """       |           u   |
+       |           n   |
+       |           s z |
+       | D         e e |
+       | E I J N V e r |
+       | T N J N B n o |
+-------+---------------+
+   DET |<3>. . . . . . |
+    IN | .<1>. . . . . |
+    JJ | . .<.>1 . . . |
+    NN | . . .<3>1 . . |
+    VB | . . . .<1>. . |
+unseen | . . . . .<.>. |
+  zero | . . . . . 1<.>|
+-------+---------------+
+(row = reference; col = test)
+"""
         assert result == expected
 
     def test_accuracy(self):
         result = self.performance['accuracy']
-        assert result == 0.8
+        assert_almost_equal(result, 8 / len(self.reference))
 
     def test_recall_class(self):
         failed = []
@@ -278,8 +296,12 @@ class TestEvaluate(object):
         assert not failed
 
     def test_recall_average(self):
+        expected = 0
+        for label, result in self.expected_recall:
+            expected += result
+        expected /= len(self.labels)
         result = self.performance['average recall']
-        assert_almost_equal(result, 0.75)
+        assert_almost_equal(result, expected)
 
     def test_recall_weighted(self):
         expected = [(label, value * self.reference.count(label)) for
@@ -297,8 +319,12 @@ class TestEvaluate(object):
         assert not failed
 
     def test_precision_average(self):
+        expected = 0
+        for label, result in self.expected_precision:
+            expected += result
+        expected /= len(self.labels)
         result = self.performance['average precision']
-        assert_almost_equal(result, 0.65)
+        assert_almost_equal(result, expected)
 
     def test_precision_weighted(self):
         expected = [(label, value * self.reference.count(label)) for
@@ -337,7 +363,7 @@ class TestEvaluate(object):
 
     def test_f_measure_average(self):
         result = self.performance['average f_measure']
-        assert_almost_equal(result, (2.75 + (2 / 3)) / 5)
+        assert_almost_equal(result, (2.75 + (2 / 3)) / 7)
 
     def test_f_measure_weighted(self):
         expected = [(label, value * self.reference.count(label)) for

@@ -186,7 +186,10 @@ def evaluate(reference, test, beta=1):
     for label, index in matrix._indices.iteritems():
         true_positive = matrix._confusion[index][index]
         total_positives = sum(matrix._confusion[index])
-        recall = true_positive / total_positives
+        if total_positives == 0:
+            recall = int(true_positive == 0)
+        else:
+            recall = true_positive / total_positives
         average += recall
         weighted_average += recall * total_positives
         key = 'recall-{0}'.format(label)
@@ -203,8 +206,8 @@ def evaluate(reference, test, beta=1):
         predicted_positive = 0  # Subtract true_positive to get false_positive
         for i in xrange(num_labels):
             predicted_positive += matrix._confusion[i][index]
-        if true_positive == 0 or predicted_positive == 0:
-            precision = 0
+        if true_positive == predicted_positive == 0:
+            precision = 1
         else:
             precision = true_positive / predicted_positive
         average += precision
@@ -221,11 +224,8 @@ def evaluate(reference, test, beta=1):
         recall = performance['recall-{0}'.format(label)]
         precision = performance['precision-{0}'.format(label)]
         total_positives = sum(matrix._confusion[index])
-        if recall == 0 or precision == 0:
-            f_measure = 0
-        else:
-            f_measure = (((1 + beta ** 2) * precision * recall) /
-                         (((beta ** 2) * precision) + recall))
+        f_measure = (((1 + beta ** 2) * precision * recall) /
+                     (((beta ** 2) * precision) + recall))
         average += f_measure
         weighted_average += f_measure * total_positives
         key = 'f-{0}'.format(label)
