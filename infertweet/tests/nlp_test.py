@@ -9,11 +9,24 @@ class TestFeatureExtractor(object):
     """Extract features from text for use in classification."""
     def setup(self):
         self.extractor = FeatureExtractor()
-        self.document = 'I am so happy about this project'.split()
+        self.document = 'I am so happy about this project'
 
     def test_no_features(self):
         result = self.extractor.extract(self.document)
         assert result == []
+
+    def test_tokenize_default(self):
+        result = self.extractor.tokenize(self.document)
+        expected = self.document.split()
+        assert result == expected
+
+    def test_tokenize_custom(self):
+
+        def custom(document):
+            return document.lower().split(' ')
+
+        self.extractor = FeatureExtractor(tokenizer=custom)
+        assert self.extractor.tokenize is custom
 
     def test_ngrams(self):
         test = [(1, 1, ['I', 'am', 'so', 'happy', 'about', 'this', 'project']),
@@ -36,7 +49,7 @@ class TestFeatureExtractor(object):
                 failed.append(((min_n, max_n), result, expected))
 
         # This explicitly shows the expected tuple return type.
-        document = 'this is a test'.split()
+        document = 'this is a test'
         expected = [('__start__', 'this'), ('this', 'is'), ('is', 'a'),
                     ('a', 'test'), ('test', '__end__')]
         expected = sorted(expected)
