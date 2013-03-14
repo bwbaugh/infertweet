@@ -6,9 +6,8 @@ For more information visit <http://www.cs.york.ac.uk/semeval-2013/task2/>.
 import ast
 from collections import namedtuple
 
+from infer import classify
 from unidecode import unidecode
-
-from infertweet import classify
 
 
 def task_b_generator(dataset_file):
