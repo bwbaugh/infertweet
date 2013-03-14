@@ -371,3 +371,9 @@ unseen | . . . . .<.>. |
         expected = sum(value for label, value in expected) / len(self.reference)
         result = self.performance['weighted f_measure']
         assert_almost_equal(result, expected)
+
+    def test_f_measure_zero(self):
+        # Issue gh-19.
+        reference = [1, 2]
+        test = [2, 3]
+        evaluate(reference, test)

@@ -224,8 +224,12 @@ def evaluate(reference, test, beta=1):
         recall = performance['recall-{0}'.format(label)]
         precision = performance['precision-{0}'.format(label)]
         total_positives = sum(matrix._confusion[index])
-        f_measure = (((1 + beta ** 2) * precision * recall) /
-                     (((beta ** 2) * precision) + recall))
+        numer = ((1 + beta ** 2) * precision * recall)
+        denom = (((beta ** 2) * precision) + recall)
+        if denom > 0:
+            f_measure = numer / denom
+        else:
+            f_measure = 0
         average += f_measure
         weighted_average += f_measure * total_positives
         key = 'f-{0}'.format(label)
