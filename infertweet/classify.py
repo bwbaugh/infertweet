@@ -169,7 +169,7 @@ class MultinomialNB(Classifier):
         """
         prob = self.prob_all(document)
         label = max(prob, key=prob.get)
-        return Classifier.Prediction(label, prob[label])
+        return self.Prediction(label, prob[label])
 
 
 def evaluate(reference, test, beta=1):
