@@ -11,6 +11,8 @@ DESCRIPTION = ('Infer information from Tweets. Useful for human-centered '
                'prediction, authorship profiling and more!')
 with open('requirements.txt') as f:
     REQUIREMENTS = f.read()
+with open('dependency_links.txt') as f:
+    DEPENDENCY_LINKS = [x.strip() for x in f]
 with open('README.md') as f:
     LONG_DESCRIPTION = f.read()
 NLTK_DEPENDENCIES = []  # None yet.
@@ -37,6 +39,7 @@ setup(
     packages=find_packages(),
 
     install_requires=REQUIREMENTS,
+    dependency_links=DEPENDENCY_LINKS,
     cmdclass={'install': InstallWithPostCommand},
 
     author="Wesley Baugh",
