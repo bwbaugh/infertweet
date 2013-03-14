@@ -38,10 +38,10 @@ class MultinomialNB(Classifier):
         self._label_vocab = defaultdict(set)
         # Dictionary of times a label has been seen.
         self._label_count = defaultdict(int)
-        # Dictionary of number of tokens seen in all documents by label.
+        # Dictionary of number of feature seen in all documents by label.
         self._label_length = defaultdict(int)
-        # Dictionary of times a token has been seen by label.
-        self._label_token_count = defaultdict(lambda: defaultdict(int))
+        # Dictionary of times a feature has been seen by label.
+        self._label_feature_count = defaultdict(lambda: defaultdict(int))
         # Size of vocabulary across all class labels.
         self._vocab_size = 0
         if documents:
@@ -49,12 +49,16 @@ class MultinomialNB(Classifier):
 
     @property
     def labels(self):
-        """Set of all class labels."""
+        """Set of all class labels.
+
+        Returns:
+            Example: set(['positive', 'negative'])
+        """
         return set(label for label in self._label_count)
 
     @property
     def vocabulary(self):
-        """Set of vocabulary across all class labels."""
+        """Set of vocabulary (features) seen in any class label."""
         label_vocab = [self._label_vocab[x] for x in self._label_vocab]
         return set().union(*label_vocab)
 
@@ -63,24 +67,33 @@ class MultinomialNB(Classifier):
 
         Args:
             documents: Tuple of (document, label) pair(s). Documents
-                must be a list of tokens, The label is a string for the
-                class label.
+                must be a collection of feature. The label can be any
+                hashable object, though is usually a string.
         """
         for document, label in documents:
             # Python 3: isinstance(document, str)
             if isinstance(document, basestring):
-                raise TypeError('Documents must be a list of tokens')
+                raise TypeError('Documents must be a collection of features')
             self._label_count[label] += 1
-            for token in document:
-                # Check if the token hasn't been seen before for any label.
-                if not any(token in self._label_vocab[x] for x in self.labels):
+            for feature in document:
+                # Check if the feature hasn't been seen before for any label.
+                if not any(feature in self._label_vocab[x] for x in self.labels):
                     self._vocab_size += 1
-                self._label_vocab[label].add(token)
-                self._label_token_count[label][token] += 1
+                self._label_vocab[label].add(feature)
+                self._label_feature_count[label][feature] += 1
                 self._label_length[label] += 1
 
     def prior(self, label):
-        """Prior probability of a label."""
+        """Prior probability of a label.
+
+        Args:
+            label: The target class label.
+            self.exact
+
+        Returns:
+            The number of training instances that had the target
+            `label`, divided by the total number of training instances.
+        """
         if label not in self.labels:
             raise KeyError(label)
         total = sum(self._label_count[x] for x in self._label_count)
@@ -89,18 +102,30 @@ class MultinomialNB(Classifier):
         else:
             return self._label_count[label] / total
 
-    def conditional(self, token, label):
-        """Conditional probability for a token given a label."""
+    def conditional(self, feature, label):
+        """Conditional probability for a feature given a label.
+
+        Args:
+            feature: The target feature.
+            label: The target class label.
+            self.laplace
+            self.exact
+
+        Returns:
+            The number of times the feature has been present across all
+            training documents for the `label`, divided by the sum of
+            the length of every training document for the `label`.
+        """
         # Note we use [Laplace smoothing][laplace].
         # [laplace]: https://en.wikipedia.org/wiki/Additive_smoothing
         if label not in self.labels:
             raise KeyError(label)
 
-        # Times token seen across all documents in a label.
+        # Times feature seen across all documents in a label.
         numer = self.laplace
         # Avoid creating an entry if the term has never been seen
-        if token in self._label_token_count[label]:
-            numer += self._label_token_count[label][token]
+        if feature in self._label_feature_count[label]:
+            numer += self._label_feature_count[label][feature]
         denom = self._label_length[label] + (self._vocab_size * self.laplace)
         if self.exact:
             return Fraction(numer, denom)
@@ -108,17 +133,29 @@ class MultinomialNB(Classifier):
             return numer / denom
 
     def _score(self, document, label):
-        """Multinomial raw score of a document given a label."""
+        """Multinomial raw score of a document given a label.
+
+        Args:
+            document: Collection of features.
+            label: The target class label.
+            self.exact
+
+        Returns:
+            The multinomial raw score of the `document` given the
+            `label`. In order to turn the raw score into a confidence
+            value, this value should be divided by the sum of the raw
+            scores across all class labels.
+        """
         if isinstance(document, basestring):
-            raise TypeError('Documents must be a list of tokens')
+            raise TypeError('Documents must be a list of features')
 
         if self.exact:
             score = self.prior(label)
         else:
             score = math.log(self.prior(label))
 
-        for token in document:
-            conditional = self.conditional(token, label)
+        for feature in document:
+            conditional = self.conditional(feature, label)
             if self.exact:
                 score *= conditional
             else:
@@ -127,11 +164,28 @@ class MultinomialNB(Classifier):
         return score
 
     def _compute_scores(self, document):
-        """Compute the multinomial score of a document for all labels."""
+        """Compute the multinomial score of a document for all labels.
+
+        Args:
+            document: Collection of features.
+
+        Returns:
+            A dict mapping class labels to the multinomial raw score
+            for the `document` given the label.
+        """
         return {x: self._score(document, x) for x in self.labels}
 
     def prob_all(self, document):
-        """Probability of a document for all labels."""
+        """Probability of a document for all labels.
+
+        Args:
+            document: Collection of features.
+            self.exact
+
+        Returns:
+            A dict mapping class labels to the confidence value that the
+            `document` belongs to the label.
+        """
         score = self._compute_scores(document)
         if not self.exact:
             # If the log-likelihood is too small, when we convert back
@@ -148,7 +202,15 @@ class MultinomialNB(Classifier):
             return {label: score[label] / total for label in self.labels}
 
     def prob(self, document, label):
-        """Probability of a document given a label."""
+        """Probability of a document given a label.
+
+        Args:
+            document: Collection of features.
+            label: The target class label.
+
+        Returns:
+            The confidence value that the `document` belongs to `label`.
+        """
         prob = self.prob_all(document)[label]
         return prob
 
@@ -156,7 +218,7 @@ class MultinomialNB(Classifier):
         """Get the most confident class label for a document.
 
         Args:
-            document: Collection of tokens.
+            document: Collection of features.
 
         Returns:
             A namedtuple representing the most confident class `label`

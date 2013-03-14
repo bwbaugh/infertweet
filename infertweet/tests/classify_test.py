@@ -27,15 +27,16 @@ class TestMultinomialNB(object):
     def make_snapshot(self):
         self.orig_label_count = deepcopy(self.classifier._label_count)
         self.orig_label_vocab = deepcopy(self.classifier._label_vocab)
-        self.orig_label_token_count = deepcopy(self.classifier
-                                               ._label_token_count)
+        self.orig_label_feature_count = deepcopy(self.classifier
+                                                 ._label_feature_count)
         self.orig_label_length = deepcopy(self.classifier._label_length)
 
     def assert_snapshot_identical(self):
         """Call if classifier's internals shouldn't have changed."""
         assert self.orig_label_count == self.classifier._label_count
         assert self.orig_label_vocab == self.classifier._label_vocab
-        assert self.orig_label_token_count == self.classifier._label_token_count
+        assert (self.orig_label_feature_count ==
+                self.classifier._label_feature_count)
         assert self.orig_label_length == self.classifier._label_length
 
     def test_init_no_training(self):
@@ -76,13 +77,13 @@ class TestMultinomialNB(object):
         result = self.classifier._vocab_size
         assert actual == result
 
-    def test_label_token_count(self):
+    def test_label_feature_count(self):
         tests = [('yes', 'Chinese', 5),
                  ('no', 'Chinese', 1),
                  ('no', 'Japan', 1)]
-        for label, token, count in tests:
-            assert self.classifier._label_token_count[label][token] == count
-        assert 'Japan' not in self.classifier._label_token_count['yes']
+        for label, feature, count in tests:
+            assert self.classifier._label_feature_count[label][feature] == count
+        assert 'Japan' not in self.classifier._label_feature_count['yes']
 
     def test_prior(self):
         tests = [('yes', Fraction(3, 4)),
@@ -108,13 +109,13 @@ class TestMultinomialNB(object):
                  ('Japan', 'no', Fraction(2, 9)),
                  ('__invalid__', 'yes', Fraction(1, 14)),
                  ('__invalid__', 'no', Fraction(1, 9))]
-        for token, label, prob in tests:
+        for feature, label, prob in tests:
             self.classifier.exact = True
-            result = self.classifier.conditional(token, label)
+            result = self.classifier.conditional(feature, label)
             assert result == prob
 
             self.classifier.exact = False
-            result = self.classifier.conditional(token, label)
+            result = self.classifier.conditional(feature, label)
             prob = float(prob)
             assert_almost_equal(result, prob)
 
@@ -127,24 +128,24 @@ class TestMultinomialNB(object):
                  ('Japan', 'no', Fraction(1, 5)),
                  ('__invalid__', 'yes', Fraction(1, 10)),
                  ('__invalid__', 'no', Fraction(2, 15))]
-        for token, label, prob in tests:
+        for feature, label, prob in tests:
             self.classifier.exact = True
-            result = self.classifier.conditional(token, label)
+            result = self.classifier.conditional(feature, label)
             assert result == prob
 
             self.classifier.exact = False
-            result = self.classifier.conditional(token, label)
+            result = self.classifier.conditional(feature, label)
             prob = float(prob)
             assert_almost_equal(result, prob)
 
-    def test_conditional_unseen_token(self):
+    def test_conditional_unseen_feature(self):
         self.classifier.conditional('__unseen__', 'yes')
-        assert '__unseen__' not in self.classifier._label_token_count['yes']
+        assert '__unseen__' not in self.classifier._label_feature_count['yes']
 
     def test_conditional_unseen_label(self):
         assert_raises(KeyError, self.classifier.conditional, '__unseen__',
                       '__unseen__')
-        assert '__unseen__' not in self.classifier._label_token_count
+        assert '__unseen__' not in self.classifier._label_feature_count
 
     def test_score(self):
         tests = [('Chinese Chinese Chinese Tokyo Japan', 'yes',
