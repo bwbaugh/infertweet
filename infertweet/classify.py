@@ -4,7 +4,7 @@ from __future__ import division
 
 import abc
 import math
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 from fractions import Fraction
 
 import nltk
@@ -13,6 +13,7 @@ import nltk
 class Classifier(object):
     """Abstract base class for classifiers."""
     __metaclass__ = abc.ABCMeta
+    Prediction = namedtuple('Prediction', 'label confidence')
 
 
 class MultinomialNB(Classifier):
@@ -152,9 +153,23 @@ class MultinomialNB(Classifier):
         return prob
 
     def classify(self, document):
-        """Class label with maximum probability for a document."""
+        """Get the most confident class label for a document.
+
+        Args:
+            document: Collection of tokens.
+
+        Returns:
+            A namedtuple representing the most confident class `label`
+            and the value of the `confidence` in the label. For example:
+
+            As tuple:
+                ('positive', 0.85)
+            As namedtuple:
+                Prediction(label='positive', confidence=0.85)
+        """
         prob = self.prob_all(document)
-        return max(prob, key=prob.get)
+        label = max(prob, key=prob.get)
+        return Classifier.Prediction(label, prob[label])
 
 
 def evaluate(reference, test, beta=1):

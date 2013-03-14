@@ -213,8 +213,13 @@ class TestMultinomialNB(object):
 
     def test_classify(self):
         document = 'Chinese Chinese Chinese Tokyo Japan'.split()
-        label = self.classifier.classify(document)
-        assert label == 'yes'
+        label, confidence = ('yes', float(Fraction(4782969, 6934265)))
+        prediction = self.classifier.classify(document)
+        # Tuple check
+        assert prediction == (label, confidence)
+        # Namedtuple check
+        assert prediction.label == label
+        assert_almost_equal(prediction.confidence, confidence)
 
     def test_classify_not_tokenized(self):
         document = 'Chinese Chinese Chinese Tokyo Japan'
