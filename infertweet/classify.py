@@ -67,7 +67,7 @@ class MultinomialNB(Classifier):
 
         Args:
             documents: Tuple of (document, label) pair(s). Documents
-                must be a collection of feature. The label can be any
+                must be a collection of features. The label can be any
                 hashable object, though is usually a string.
         """
         for document, label in documents:
