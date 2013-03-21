@@ -375,7 +375,7 @@ def tokenizer(document):
     return tokens
 
 
-if __name__ == '__main__':
+def main():
     plot_queue = multiprocessing.Queue()
     confusion_queue = multiprocessing.Queue()
     start_plot(plot_queue, confusion_queue)
@@ -404,3 +404,7 @@ if __name__ == '__main__':
         confusion_queue.close()
 
     print 'Done processing.'
+
+
+if __name__ == '__main__':
+    main()
