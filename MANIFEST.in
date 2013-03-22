@@ -1,1 +1,4 @@
-include *.txt *.md
+include dependency_links.txt
+include LICENSE.txt
+include requirements.txt
+include README.md

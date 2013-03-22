@@ -1,0 +1,25 @@
+body {
+    background-color: darkgray;
+    font-family: Verdana, Geneva, sans-serif;
+    font-size: 1.125em;
+}
+
+h1 {
+    color: black;
+}
+
+div#wrapper {
+    margin-left: auto;
+    margin-right: auto;
+    width: 90%;
+}
+
+div#mainbody {
+    background-color: #f3f3f3;
+    padding: 2em 2em 1em 2.5em;
+    height: 100%;
+}
+
+#query {
+    font-size: 1.8em;
+}

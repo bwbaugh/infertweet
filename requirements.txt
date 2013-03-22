@@ -3,3 +3,5 @@ nltk>=2.0.3
 PyYAML>=3.09
 Unidecode>=0.04.12
 infer==0.1.0.dev-20130320
+tornado>=2.4.1
+rpyc>=3.2.3
