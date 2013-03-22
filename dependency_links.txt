@@ -1,1 +1,0 @@
-https://github.com/bwbaugh/infer/tarball/ac642caca1435e0ed2d643e2cafa23cb063eff7f#egg=infer-0.1.0.dev-20130320
