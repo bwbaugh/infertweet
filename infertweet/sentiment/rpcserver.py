@@ -11,6 +11,10 @@ from rpyc.utils.server import ThreadedServer
 
 from infertweet.config import get_config
 
+# Load requirements of the pickled classifier.
+from collections import namedtuple
+from infertweet.sentiment.train import tokenizer
+
 
 def main():
     config = get_config()
@@ -19,9 +23,6 @@ def main():
     sentiment_classifier_location = os.path.join(path, sentiment_fname)
 
     print 'Loading classifier (may take a few minutes) ... ',
-    # Load requirements of the pickled classifier.
-    from collections import namedtuple
-    from infertweet.sentiment.train import tokenizer
     assert namedtuple and tokenizer
     with open(sentiment_classifier_location, mode='rb') as f:
         sentiment_classifier = pickle.load(f)
