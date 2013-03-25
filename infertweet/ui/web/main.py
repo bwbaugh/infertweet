@@ -56,6 +56,17 @@ class SentimentQueryHandler(tornado.web.RequestHandler):
             else:
                 return 'positive', probability
 
+    def get_conditionals(self, features):
+        predicted_features = []
+        for feature in features:
+            # We're just interested in unigrams.
+            if len(feature) > 1:
+                continue
+            feature, = feature  # Unpack unit-sized tuple.
+            label, probability = self.conditional((feature, ))
+            predicted_features.append((feature, label, probability))
+        return predicted_features
+
     def log_query(self, label, probability, query):
         """Log the query to a file."""
         try:
@@ -78,15 +89,7 @@ class SentimentQueryHandler(tornado.web.RequestHandler):
     def process_query(self, query):
         features = self.extract(query)
         label, probability = self.predict(features)
-        predicted_features = []
-        for feature in features:
-            # We're just interested in unigrams.
-            if len(feature) > 1:
-                continue
-            feature, = feature  # Unpack unit-sized tuple.
-            f_label, f_prob = self.conditional((feature, ))
-            predicted_features.append((feature, f_label, f_prob))
-        features = predicted_features
+        features = self.get_conditionals(features)
         return features, label, probability
 
     def get(self):
