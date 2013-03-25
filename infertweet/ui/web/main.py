@@ -107,7 +107,7 @@ class SentimentQueryHandler(tornado.web.RequestHandler):
 def color_code(label, probability):
     """Converts float [0.0 - 1.0] to HTML color code."""
     if label == 'neutral':
-        code = '#808080'
+        code = '#000000'
     else:
         if label == 'negative':
             probability = 1 - probability
