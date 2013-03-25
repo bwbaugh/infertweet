@@ -41,20 +41,20 @@ class SentimentQueryHandler(tornado.web.RequestHandler):
 
     def conditional(self, feature):
         """Get the contribution of an individual feature."""
-        label, probability = self.subjective_classify(feature)
-        if label == 'neutral':
-            probability = self.subjective_conditional(feature, 'neutral')
-            total = probability + self.subjective_conditional(feature, 'subjective')
-            return label, probability / total
+        probability = self.subjective_conditional(feature, 'neutral')
+        total = probability + self.subjective_conditional(feature, 'subjective')
+        probability /= total
+        if probability < 0.5:
+            return 'neutral', 1 - probability
         else:
             label, probability = self.polarity_classify(feature)
-            if label == 'positive':
-                probability = self.polarity_conditional(feature, 'positive')
-                total = probability + self.polarity_conditional(feature, 'negative')
+            probability = self.polarity_conditional(feature, 'positive')
+            total = probability + self.polarity_conditional(feature, 'negative')
+            probability /= total
+            if probability < 0.5:
+                return 'negative', 1 - probability
             else:
-                probability = self.polarity_conditional(feature, 'negative')
-                total = probability + self.polarity_conditional(feature, 'positive')
-            return label, probability / total
+                return 'positive', probability
 
     def log_query(self, label, probability, query):
         """Log the query to a file."""
