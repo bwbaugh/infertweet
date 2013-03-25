@@ -107,12 +107,14 @@ class SentimentQueryHandler(tornado.web.RequestHandler):
 def color_code(label, probability):
     """Converts float [0.0 - 1.0] to HTML color code."""
     if label == 'neutral':
-        code = '#000000'
+        # We want the the neutral text to be darker (closer to black)
+        # the more confident we are that it is neutral.
+        rgb = (1 - probability, ) * 3  # all same causes grayscale.
     else:
         if label == 'negative':
             probability = 1 - probability
         rgb = colorsys.hsv_to_rgb(probability / 3, 1, 0.75)
-        code = '#' + ''.join([hex(int(x * 256))[2:].zfill(2) for x in rgb])
+    code = '#' + ''.join([hex(int(x * 256))[2:].zfill(2) for x in rgb])
     return code
 
 
