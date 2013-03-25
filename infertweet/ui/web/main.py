@@ -80,7 +80,11 @@ class SentimentQueryHandler(tornado.web.RequestHandler):
         label, probability = self.predict(features)
         predicted_features = []
         for feature in features:
-            f_label, f_prob = self.conditional(feature)
+            # We're just interested in unigrams.
+            if len(feature) > 1:
+                continue
+            feature, = feature  # Unpack unit-sized tuple.
+            f_label, f_prob = self.conditional((feature, ))
             predicted_features.append((feature, f_label, f_prob))
         features = predicted_features
         return features, label, probability
