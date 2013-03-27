@@ -2,6 +2,7 @@
 """Sentiment analysis for SemEval-2013."""
 # Normally this file would be named `__main__.py`, however there is a
 # bug with multiprocessing that prevents it from working under Windows.
+import json
 import multiprocessing
 try:
     import cPickle as pickle
@@ -16,10 +17,9 @@ from infer.nlp import FeatureExtractor
 
 import infertweet.corpus.semeval as semeval
 import infertweet.corpus.stanford as stanford140
+from infertweet.config import get_config
 from infertweet.sentiment.experiment import run_experiment
 from infertweet.sentiment.plot import start_plot
-from infertweet.sentiment.constants import (
-    TITLES, CHUNK_SIZE, FIRST_CHUNK)
 
 
 Pickled = namedtuple('Pickled', 'extractor classifier')
@@ -274,15 +274,21 @@ def main():
     extractor = FeatureExtractor(tokenizer=tokenizer)
     extractor.min_n, extractor.max_n = 1, 2
 
-    experiment = run_experiment(first, second, extractor, CHUNK_SIZE, FIRST_CHUNK)
+    config = get_config()
+    chunk_size = config.getint('sentiment', 'chunk_size')
+    first_chunk = config.getint('sentiment', 'first_chunk')
+    titles = json.loads(config.get('sentiment', 'titles'))
+
+    experiment = run_experiment(first, second, extractor, chunk_size,
+                                first_chunk)
 
     try:
         for data in experiment:
-            data[TITLES[0]] = parse_performance(data[TITLES[0]])
-            data[TITLES[1]] = parse_performance(data[TITLES[1]])
+            data[titles[0]] = parse_performance(data[titles[0]])
+            data[titles[1]] = parse_performance(data[titles[1]])
             plot_queue.put(data)
             confusion_queue.put(data)
-            print data[TITLES[0]]['count'], data[TITLES[0]]['SemEval'], data[TITLES[1]]['SemEval'], data[TITLES[0]]['vocab'], data[TITLES[1]]['vocab']
+            print data[titles[0]]['count'], data[titles[0]]['SemEval'], data[titles[1]]['SemEval'], data[titles[0]]['vocab'], data[titles[1]]['vocab']
     except KeyboardInterrupt:
         pass
     finally:

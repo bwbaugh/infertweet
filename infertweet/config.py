@@ -19,6 +19,12 @@ def create_default_config():
     config.add_section('semeval')
     config.set('semeval', 'training', 'PATH/tweeti-b.dist.tsv.data')
     config.set('semeval', 'development', 'PATH/twitter-dev-gold-B.tsv')
+    config.set('semeval', 'twitter_test', 'PATH/twitter-test-input-B.tsv')
+    config.set('semeval', 'sms_test', 'PATH/sms-test-input-B.tsv')
+    config.set('semeval', 'twitter_predict',
+               'PATH/task2-bwbaugh-B-twitter-unconstrained.output')
+    config.set('semeval', 'sms_predict',
+               'PATH/task2-bwbaugh-B-SMS-unconstrained.output')
 
     config.add_section('sentiment')
     config.set('sentiment', 'path', 'PATH/TO/CLASSIFIER/')
@@ -26,6 +32,13 @@ def create_default_config():
     config.set('sentiment', 'rpc_host', 'localhost')
     config.set('sentiment', 'rpc_port', '18861')
     config.set('sentiment', 'web_query_log', 'web_log_queries.txt')
+    config.set('sentiment', 'chunk_size', '5000')
+    config.set('sentiment', 'first_chunk', '100')
+    config.set('sentiment', 'titles',
+               '("Single Classifier", "Hierarchical Classifier")')
+    config.set('sentiment', 'labels',
+               '("SemEval", "Positive", "Negative", "Neutral", "Accuracy")')
+    config.set('sentiment', 'test_scale', '1')
 
     config.add_section('stanford')
     config.set('stanford', 'corpus',

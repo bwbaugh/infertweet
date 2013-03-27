@@ -1,5 +1,6 @@
 # Copyright (C) 2013 Wesley Baugh
 import itertools
+import json
 import multiprocessing
 import Queue
 
@@ -9,7 +10,7 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import AutoMinorLocator, MaxNLocator
 from matplotlib.animation import FuncAnimation
 
-from infertweet.sentiment.constants import CHUNK_SIZE, TITLES, LABELS
+from infertweet.config import get_config
 
 
 def make_subplots():
@@ -17,7 +18,10 @@ def make_subplots():
 
     def setup_axes(axes):
         """Setup look and feel of the axes."""
-        for ax, title in zip(axes, TITLES):
+        config = get_config()
+        titles = json.loads(config.get('sentiment', 'titles'))
+        labels = json.loads(config.get('sentiment', 'labels'))
+        for ax, title in zip(axes, titles):
             ax.set_title(title)
             ax.set_xlabel('training instances')
             ax.set_ylabel('performance')
@@ -33,15 +37,17 @@ def make_subplots():
             ax.grid(True)
 
             # Use current line labels to build legend.
-            ax.legend(loc='upper center', ncol=len(LABELS))
+            ax.legend(loc='upper center', ncol=len(labels))
 
     def make_lines(axes):
         """Create the lines for each axes."""
+        config = get_config()
+        labels = json.loads(config.get('sentiment', 'labels'))
         lines = []
         marker = itertools.cycle('o^vds')
         for ax in axes:
             ax_lines = []
-            for label in LABELS:
+            for label in labels:
                 x, y = [0], [0]
                 line, = ax.plot(x, y, label=label)  # comma for unpacking.
                 line.set_marker(next(marker))
@@ -101,11 +107,14 @@ def update_figure(data, lines, axes):
 
     def update_axes(count, axes):
         """Rescale axes to fit the new data."""
+        config = get_config()
+        chunk_size = config.getint('sentiment', 'chunk_size')
+
         def round_nearest(x, base):
             return int(base * round(float(x) / base))
 
         for ax in axes:
-            ax.set_xbound(0, round_nearest(count + CHUNK_SIZE, CHUNK_SIZE))
+            ax.set_xbound(0, round_nearest(count + chunk_size, chunk_size))
             # ax.relim()
             # ax.autoscale_view(True,True,True)
 
@@ -174,9 +183,11 @@ def make_confusion():
 
     def setup_axes(axes, empty_confusion):
         """Setup look and feel of the axes."""
+        config = get_config()
+        titles = json.loads(config.get('sentiment', 'titles'))
         width = len(empty_confusion)
         height = len(empty_confusion[0])
-        for ax, title in zip(axes, TITLES):
+        for ax, title in zip(axes, titles):
             ax.set_title(title)
             ax.set_aspect(1)
             alphabet = ['Neg', 'Neu', 'Pos']
@@ -228,7 +239,9 @@ def update_confusion(data, images, axes, annotations):
     def update_images(data, images, axes, annotations):
         clear_annotations(annotations)
         annotations = []
-        for ax, image, title in zip(axes, images, TITLES):
+        config = get_config()
+        titles = json.loads(config.get('sentiment', 'titles'))
+        for ax, image, title in zip(axes, images, titles):
             confusion_matrix = data[title]['confusion']._confusion
             norm_conf = normalized_confusion_matrix(confusion_matrix)
             image.set_data(norm_conf)
@@ -245,9 +258,12 @@ def update_confusion(data, images, axes, annotations):
 def confusion_worker(queue, animation=False):
     """Matplotlib worker."""
 
+    config = get_config()
+    titles = json.loads(config.get('sentiment', 'titles'))
+
     def init():
         clear_annotations(annotations)
-        for ax, image, title in zip(axes, images, TITLES):
+        for ax, image, title in zip(axes, images, titles):
             empty_confusion = [[0] * 3] * 3
             image.set_data(empty_confusion)
             # annotate_confusion_matrix(ax, empty_confusion, annotations)
