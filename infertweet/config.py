@@ -27,6 +27,10 @@ def create_default_config():
     config.set('sentiment', 'rpc_port', '18861')
     config.set('sentiment', 'web_query_log', 'web_log_queries.txt')
 
+    config.add_section('stanford')
+    config.set('stanford', 'corpus',
+               'PATH/training.1600000.processed.noemoticon.shuffled.csv')
+
     config.add_section('twitter_corpus')
     config.set('twitter_corpus', 'emoticons', 'PATH/twitter-sentiment.json.bz2')
 

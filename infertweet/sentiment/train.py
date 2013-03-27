@@ -15,6 +15,7 @@ from infer.experiment import Experiment
 from infer.nlp import FeatureExtractor
 
 import infertweet.corpus.semeval as semeval
+import infertweet.corpus.stanford as stanford140
 from infertweet.sentiment.experiment import run_experiment
 from infertweet.sentiment.plot import start_plot
 from infertweet.sentiment.constants import (
@@ -22,26 +23,6 @@ from infertweet.sentiment.constants import (
 
 
 Pickled = namedtuple('Pickled', 'extractor classifier')
-
-
-class TrainStanford(Experiment):
-    def _train_data(self):
-        with open(r"R:\_Other\Twitter\2013\stanford\training.1600000.processed.noemoticon.shuffled.csv") as f:
-            for line in f:
-                line = line.split(',', 5)
-                if len(line) != 6:
-                    continue
-                sentiment = int(line[0][1:-1])
-                if sentiment == 0:
-                    sentiment = 'negative'
-                elif sentiment == 2:
-                    sentiment = 'neutral'
-                elif sentiment == 4:
-                    sentiment = 'positive'
-                text = line[5]
-                # Strip surrounding '"'
-                text = text[1:-1]
-                yield self.DataInstance(text, sentiment)
 
 
 class TrainWikipedia(Experiment):
@@ -56,20 +37,20 @@ class TrainWikipedia(Experiment):
                             yield self.DataInstance(sentence, 'neutral')
 
 
-class TrainSemEvalWithStanford(semeval.TrainSemEval, TrainStanford):
+class TrainSemEvalWithStanford(semeval.TrainSemEval, stanford140.TrainStanford):
     def _train_data(self):
         for x in semeval.TrainSemEval._train_data(self):
             yield x
-        for x in TrainStanford._train_data(self):
+        for x in stanford140.TrainStanford._train_data(self):
             yield x
 
 
 class TrainZipStanfordWikipedia(semeval.TrainSemEval,
-                                TrainStanford, TrainWikipedia):
+                                stanford140.TrainStanford, TrainWikipedia):
     def _train_data(self):
         for x in semeval.TrainSemEval._train_data(self):
             yield x
-        stanford = TrainStanford._train_data(self)
+        stanford = stanford140.TrainStanford._train_data(self)
         wikipedia = TrainWikipedia._train_data(self)
         while 1:
             yield next(stanford)
