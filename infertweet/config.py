@@ -13,12 +13,19 @@ def create_default_config():
     """Create a default config file."""
     config = ConfigParser.SafeConfigParser()
 
+    config.add_section('semeval')
+    config.set('semeval', 'training', 'PATH/tweeti-b.dist.tsv.data')
+    config.set('semeval', 'development', 'PATH/twitter-dev-gold-B.tsv')
+
     config.add_section('sentiment')
     config.set('sentiment', 'path', 'PATH/TO/CLASSIFIER/')
     config.set('sentiment', 'classifier', 'sentiment-classifier.pickle')
     config.set('sentiment', 'rpc_host', 'localhost')
     config.set('sentiment', 'rpc_port', '18861')
     config.set('sentiment', 'web_query_log', 'web_log_queries.txt')
+
+    config.add_section('twitter_corpus')
+    config.set('twitter_corpus', 'emoticons', 'PATH/twitter-sentiment.json.bz2')
 
     config.add_section('web')
     config.set('web', 'port', '8080')

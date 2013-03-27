@@ -7,9 +7,6 @@ FIRST_CHUNK = 8100
 CHUNK_SIZE = 5000
 TEST_SCALE = 1  # divided by this.
 
-TRAINING = r"C:\Users\AE5NS.AE5NS-D\Dropbox\School\Courses - Current\CSCE 6933 - Semi-Supervised Learning\SemEval-2013\Training\tweeti-b.dist.tsv.data"
-DEVELOPMENT = r"C:\Users\AE5NS.AE5NS-D\Dropbox\School\Courses - Current\CSCE 6933 - Semi-Supervised Learning\SemEval-2013\Test\semeval2013_task2_twitter_sentiment_dev_data_reformatted\twitter-dev-gold-B.tsv"
-
 TWITTER_TEST = r"C:\Users\AE5NS.AE5NS-D\Dropbox\School\Courses - Current\CSCE 6933 - Semi-Supervised Learning\SemEval-2013\Test\submission\twitter-test-input-B.tsv"
 SMS_TEST = r"C:\Users\AE5NS.AE5NS-D\Dropbox\School\Courses - Current\CSCE 6933 - Semi-Supervised Learning\SemEval-2013\Test\submission\sms-test-input-B.tsv"
 

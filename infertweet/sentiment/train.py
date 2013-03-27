@@ -14,29 +14,14 @@ from infer.classify import MultinomialNB
 from infer.experiment import Experiment
 from infer.nlp import FeatureExtractor
 
-from infertweet.corpus.semeval import task_b_generator
-from infertweet.corpus.twitter_corpus import tweet_generator
+import infertweet.corpus.semeval as semeval
 from infertweet.sentiment.experiment import run_experiment
 from infertweet.sentiment.plot import start_plot
 from infertweet.sentiment.constants import (
-    TITLES, DEVELOPMENT, TRAINING, CHUNK_SIZE, FIRST_CHUNK)
+    TITLES, CHUNK_SIZE, FIRST_CHUNK)
 
 
 Pickled = namedtuple('Pickled', 'extractor classifier')
-
-
-class TestSemEval(Experiment):
-    def _test_data(self):
-        with open(DEVELOPMENT) as f:
-            for instance in task_b_generator(f):
-                yield instance
-
-
-class TestSemEvalTrainingSet(Experiment):
-    def _test_data(self):
-        with open(TRAINING) as f:
-            for instance in task_b_generator(f):
-                yield instance
 
 
 class TestTwitterCorpus(Experiment):
@@ -54,70 +39,6 @@ class TestTwitterCorpus(Experiment):
                 # Strip surrounding '"'
                 text = text[1:-1]
                 yield self.DataInstance(text, sentiment)
-
-
-class TrainSemEval(Experiment):
-    def _train_data(self):
-        with open(TRAINING) as f:
-            for instance in task_b_generator(f):
-                yield instance
-
-
-class TrainSemEvalBoosting(TrainSemEval):  # TODO(bwbaugh): Is "boosting" right?
-    def _train_data(self):
-        for count, x in enumerate(super(TrainSemEvalBoosting, self)
-                                  ._train_data(), start=1):
-            yield x
-
-        self.chunk_size /= 5
-        while 1:
-            with open(TRAINING) as f:
-                old_count = count
-                for tweet in task_b_generator(f):
-                    document = tweet.text
-                    features = self.extractor.extract(document)
-                    if tweet.label != self._predict(features)[0]:
-                        yield self.DataInstance(tweet.text, tweet.label)
-                        count += 1
-                if count < (old_count + 10):
-                    break
-
-
-class TrainSemEvalSelfLearning(TrainSemEval):
-    def _train_data(self):
-        for count, x in enumerate(super(TrainSemEvalSelfLearning, self)
-                                  ._train_data(), start=1):
-            yield x
-
-        # for count, tweet in enumerate(tweet_generator(r"R:\_Other\Twitter\TwitterCorpus\twitter-sentiment_preprocess_1097409.json.bz2"), start=count + 1):
-        # for tweet in tweet_generator(r"D:\Twitter\tweet_loc_denton-16.1302200911.json"):
-        for tweet in tweet_generator(r"R:\_Other\Twitter\TwitterCorpus\twitter-sentiment_preprocess_1097409.json.bz2"):
-            features = self.extractor.extract(tweet.text)
-            label = None
-            label, probability, = self._predict(features)
-            # if tweet.text.count(':(') >= tweet.text.count(':)'):
-            #     label, probability = 'negative', 1.0
-            # elif ':)' in tweet.text:
-            #     label, probability = 'positive', 1.0
-            # if not label:
-            #     continue
-            # label = predict_func(features)
-
-            if label == 'neutral':
-                continue
-
-            if probability > 0.8:
-                count += 1
-                yield self.DataInstance(tweet.text, label)
-                # if count == 50000:
-                #     worst = self.get_wrong_results(extractor, predict_func,
-                #                                    correct_labels,
-                #                                    test_data)
-                #     pprint(worst)
-                #     break
-
-                # if count == 200000:
-                #     break
 
 
 class TrainStanford(Experiment):
@@ -152,17 +73,18 @@ class TrainWikipedia(Experiment):
                             yield self.DataInstance(sentence, 'neutral')
 
 
-class TrainSemEvalWithStanford(TrainSemEval, TrainStanford):
+class TrainSemEvalWithStanford(semeval.TrainSemEval, TrainStanford):
     def _train_data(self):
-        for x in TrainSemEval._train_data(self):
+        for x in semeval.TrainSemEval._train_data(self):
             yield x
         for x in TrainStanford._train_data(self):
             yield x
 
 
-class TrainZipStanfordWikipedia(TrainSemEval, TrainStanford, TrainWikipedia):
+class TrainZipStanfordWikipedia(semeval.TrainSemEval,
+                                TrainStanford, TrainWikipedia):
     def _train_data(self):
-        for x in TrainSemEval._train_data(self):
+        for x in semeval.TrainSemEval._train_data(self):
             yield x
         stanford = TrainStanford._train_data(self)
         wikipedia = TrainWikipedia._train_data(self)
@@ -380,8 +302,10 @@ def main():
     confusion_queue = multiprocessing.Queue()
     start_plot(plot_queue, confusion_queue)
 
-    first = SingleClassifier, TrainSemEvalSelfLearning, TestSemEval
-    second = HierarchicalClassifier, TrainSemEvalSelfLearning, TestSemEval
+    first = (SingleClassifier, semeval.TrainSemEvalSelfLearning,
+             semeval.TestSemEval)
+    second = (HierarchicalClassifier, semeval.TrainSemEvalSelfLearning,
+              semeval.TestSemEval)
 
     extractor = FeatureExtractor(tokenizer=tokenizer)
     extractor.min_n, extractor.max_n = 1, 2
