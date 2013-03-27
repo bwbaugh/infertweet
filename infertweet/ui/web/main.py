@@ -2,6 +2,7 @@
 """Web interface allowing users to submit queries and get a response."""
 import os
 import colorsys
+from datetime import datetime
 
 import rpyc
 import tornado.ioloop
@@ -74,11 +75,12 @@ class SentimentQueryHandler(tornado.web.RequestHandler):
         except KeyError:
             client_ip = self.request.remote_ip
 
-        message = '{}\t{}\t{}\t{}'.format(
+        message = '\t'.join([
+            str(datetime.utcnow()) + ' +0000',
             client_ip,
             label,
-            probability,
-            query.encode('utf-8'))
+            str(probability),
+            query.encode('utf-8')])
         print message
         try:
             with open(self.web_query_log, mode='a') as f:
