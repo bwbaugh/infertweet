@@ -14,7 +14,8 @@ from infer.classify import MultinomialNB
 from infer.experiment import Experiment
 from infer.nlp import FeatureExtractor
 
-from infertweet.semeval import task_b_generator
+from infertweet.corpus.semeval import task_b_generator
+from infertweet.corpus.twitter_corpus import tweet_generator
 from infertweet.sentiment.experiment import run_experiment
 from infertweet.sentiment.plot import start_plot
 from infertweet.sentiment.constants import (
@@ -88,7 +89,6 @@ class TrainSemEvalSelfLearning(TrainSemEval):
                                   ._train_data(), start=1):
             yield x
 
-        from tweetcorpus import tweet_generator
         # for count, tweet in enumerate(tweet_generator(r"R:\_Other\Twitter\TwitterCorpus\twitter-sentiment_preprocess_1097409.json.bz2"), start=count + 1):
         # for tweet in tweet_generator(r"D:\Twitter\tweet_loc_denton-16.1302200911.json"):
         for tweet in tweet_generator(r"R:\_Other\Twitter\TwitterCorpus\twitter-sentiment_preprocess_1097409.json.bz2"):

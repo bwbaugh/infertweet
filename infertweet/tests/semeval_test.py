@@ -4,7 +4,7 @@ import ast
 from nose.tools import assert_almost_equal
 from unidecode import unidecode
 
-from infertweet import semeval as s
+from infertweet.corpus import semeval as s
 
 
 EXAMPLE_DATA = """
