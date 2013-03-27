@@ -13,6 +13,9 @@ def create_default_config():
     """Create a default config file."""
     config = ConfigParser.SafeConfigParser()
 
+    config.add_section('sanders')
+    config.set('sanders', 'corpus', 'PATH/test-corpus.csv')
+
     config.add_section('semeval')
     config.set('semeval', 'training', 'PATH/tweeti-b.dist.tsv.data')
     config.set('semeval', 'development', 'PATH/twitter-dev-gold-B.tsv')

@@ -24,23 +24,6 @@ from infertweet.sentiment.constants import (
 Pickled = namedtuple('Pickled', 'extractor classifier')
 
 
-class TestTwitterCorpus(Experiment):
-    def _test_data(self):
-        import codecs
-        with codecs.open(r"R:\_Other\Twitter\TwitterCorpus\test-corpus.csv", encoding='utf-8') as f:
-            for line in f:
-                line = line.split(',', 5)
-                if len(line) != 5:
-                    continue
-                sentiment = line[1][1:-1].encode('utf-8')
-                if sentiment not in ['positive', 'negative', 'neutral']:
-                    continue
-                text = line[4].encode('utf-8')
-                # Strip surrounding '"'
-                text = text[1:-1]
-                yield self.DataInstance(text, sentiment)
-
-
 class TrainStanford(Experiment):
     def _train_data(self):
         with open(r"R:\_Other\Twitter\2013\stanford\training.1600000.processed.noemoticon.shuffled.csv") as f:
