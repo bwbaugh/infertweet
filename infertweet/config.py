@@ -13,6 +13,9 @@ def create_default_config():
     """Create a default config file."""
     config = ConfigParser.SafeConfigParser()
 
+    config.add_section('art_festival')
+    config.set('art_festival', 'corpus', 'PATH/art_tweets_all_sentiment.tsv')
+
     config.add_section('sanders')
     config.set('sanders', 'corpus', 'PATH/test-corpus.csv')
 
