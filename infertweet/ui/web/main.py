@@ -133,19 +133,25 @@ def get_rpc_server(config):
     return rpc_server
 
 
-def start_server(config):
-    # Get the SHA of the current Git commit
+def get_git_version():
+    """Get the SHA of the current Git commit.
+
+    Returns:
+        String tuple of the `git_version` as returned by `git describe`,
+        and the `git_commit`, which is the full SHA of the last commit.
+        If there was an error retrieving the values then (None, None) is
+        returned.
+    """
     try:
         git_commit = subprocess.check_output([
             'git', 'rev-parse', '--verify', 'HEAD']).rstrip()
         git_version = subprocess.check_output(['git', 'describe']).rstrip()
     except OSError, subprocess.CalledProcessError:
-        git_commit = None
-        print 'Could not detect current Git commit.'
-    else:
-        print 'Version: {0} ({1})'.format(git_version, git_commit)
-        git_version = (git_version, git_commit)
+        git_version, git_commit = None, None
+    return git_version, git_commit
 
+
+def start_server(config, git_version):
     application = tornado.web.Application(
         [(r"/", MainHandler),
          (r"/sentiment/", SentimentQueryHandler)],
@@ -164,8 +170,13 @@ def start_server(config):
 def main():
     """Starts the web server as a user interface to the system."""
     config = get_config()
+    git_version, git_commit = get_git_version()
+    if git_version:
+        print 'Version: {0} ({1})'.format(git_version, git_commit)
+    else:
+        print 'Could not detect current Git commit.'
     print 'Starting web server on port {}'.format(config.getint('web', 'port'))
-    start_server(config)
+    start_server(config=config, git_version=(git_version, git_commit))
 
 if __name__ == '__main__':
     main()
