@@ -17,18 +17,18 @@ class MainHandler(tornado.web.RequestHandler):
     """Handles requests for the query input page."""
 
     def initialize(self):
-        self.git_commit = self.application.settings.get('git_commit')
+        self.git_version = self.application.settings.get('git_version')
 
     def get(self):
         """Renders the query input page."""
-        self.render("index.html", git_commit=self.git_commit)
+        self.render("index.html", git_version=self.git_version)
 
 
 class SentimentQueryHandler(tornado.web.RequestHandler):
     """Handles sentiment queries and displays response."""
 
     def initialize(self):
-        self.git_commit = self.application.settings.get('git_commit')
+        self.git_version = self.application.settings.get('git_version')
         self.web_query_log = self.application.settings.get('web_query_log')
         self.rpc = self.application.settings.get('rpc_server')
         self.extract = self.rpc.root.extract
@@ -108,7 +108,7 @@ class SentimentQueryHandler(tornado.web.RequestHandler):
                     probability=probability,
                     color_code=color_code,
                     features=features,
-                    git_commit=self.git_commit)
+                    git_version=self.git_version)
         self.log_query(label, probability, query)
 
 
@@ -138,11 +138,13 @@ def start_server(config):
     try:
         git_commit = subprocess.check_output([
             'git', 'rev-parse', '--verify', 'HEAD']).rstrip()
+        git_version = subprocess.check_output(['git', 'describe']).rstrip()
     except OSError, subprocess.CalledProcessError:
         git_commit = None
         print 'Could not detect current Git commit.'
     else:
-        print 'Current Git Commit: {0}'.format(git_commit)
+        print 'Version: {0} ({1})'.format(git_version, git_commit)
+        git_version = (git_version, git_commit)
 
     application = tornado.web.Application(
         [(r"/", MainHandler),
@@ -153,7 +155,7 @@ def start_server(config):
         debug=config.getboolean('web', 'debug'),
         web_query_log=config.get('sentiment', 'web_query_log'),
         rpc_server=get_rpc_server(config),
-        git_commit=git_commit)
+        git_version=git_version)
     http_server = tornado.httpserver.HTTPServer(application, xheaders=True)
     http_server.listen(config.getint('web', 'port'))
     tornado.ioloop.IOLoop.instance().start()
