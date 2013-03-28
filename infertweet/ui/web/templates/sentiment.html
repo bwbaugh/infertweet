@@ -1,44 +1,35 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <title>InferTweet | Sentiment</title>
-    <link rel=StyleSheet href="{{ static_url("style.css") }}" type="text/css"
-          media=screen>
-  </head>
+{% extends "base.html" %}
 
-  <body>
-    <div id="wrapper">
-      <div id="mainbody">
-        <h1>InferTweet</h1>
-        <form method="get">
-          <input type="text" id="query" name="q" autofocus="autofocus"
-                 value="{{ query }}">
-          <input type="submit" value="Estimate Tone">
-        </form>
-        <section id="results">
-          <section>
-            <h1>Query:</h1>
-            {{ query }}
-          </section>
-          <section>
-            <h1>Sentiment:</h1>
-            <span style="color: {{ color_code(label, probability) }}">
-              {{ label }}
-            </span>
-            ({{ '{:.2%}'.format(probability) }})
-          </section>
-          <section>
-            <h1>Features:</h1><br>
-            {% for (feature, f_label, f_prob) in features %}
-            <span style="color: {{ color_code(f_label, f_prob) }}"
-                  title="{{ '{}: {:.2%}'.format(f_label, f_prob) }}">
-              {{ feature }}
-            </span>
-            {% end %}
-          </section>
-        </section>
-      </div>
-    </div>
-  </body>
-</html>
+{% block title %}
+InferTweet | Sentiment
+{% end %}
+
+{% block content %}
+<form method="get">
+  <input type="text" id="query" name="q" autofocus="autofocus"
+         value="{{ query }}">
+  <input type="submit" value="Estimate Tone">
+</form>
+<section id="results">
+  <section>
+    <h1>Query:</h1>
+    {{ query }}
+  </section>
+  <section>
+    <h1>Sentiment:</h1>
+    <span style="color: {{ color_code(label, probability) }}">
+      {{ label }}
+    </span>
+    ({{ '{:.2%}'.format(probability) }})
+  </section>
+  <section>
+    <h1>Features:</h1><br>
+    {% for (feature, f_label, f_prob) in features %}
+    <span style="color: {{ color_code(f_label, f_prob) }}"
+          title="{{ '{}: {:.2%}'.format(f_label, f_prob) }}">
+      {{ feature }}
+    </span>
+    {% end %}
+  </section>
+</section>
+{% end %}
