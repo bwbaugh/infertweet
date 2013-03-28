@@ -20,6 +20,14 @@ div#mainbody {
     height: 100%;
 }
 
+div#results {
+    padding-top: 1em;
+}
+
+#results p {
+    margin: 0;
+}
+
 #query {
     font-size: 1.8em;
     width: 100%;

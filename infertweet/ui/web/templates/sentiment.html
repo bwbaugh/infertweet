@@ -14,11 +14,24 @@
           <input type="text" id="query" name="q" autofocus="autofocus" value="{{ query }}">
           <input type="submit" value="Estimate Tone">
         </form>
-        <br>
-        <strong>Query:</strong> {{ query }}<br>
-        <strong>Sentiment:</strong> <span style="color: {{ color_code(label, probability) }}">{{ label }}</span> ({{ '{:.2%}'.format(probability) }})<br>
-        <strong>Features:</strong><br>{% for (feature, f_label, f_prob) in features %}
-        <span style="color: {{ color_code(f_label, f_prob) }}" title="{{ '{}: {:.2%}'.format(f_label, f_prob) }}">{{ feature }}</span> {% end %}
+        <div id="results">
+          <p>
+            <strong>Query:</strong>
+            {{ query }}
+          </p>
+          <p>
+            <strong>Sentiment:</strong>
+            <span style="color: {{ color_code(label, probability) }}">{{ label }}</span> ({{ '{:.2%}'.format(probability) }})
+          </p>
+          <p>
+            <strong>Features:</strong><br>
+            {% for (feature, f_label, f_prob) in features %}
+            <span style="color: {{ color_code(f_label, f_prob) }}" title="{{ '{}: {:.2%}'.format(f_label, f_prob) }}">
+              {{ feature }}
+            </span>
+            {% end %}
+          </p>
+        </div>
       </div>
     </div>
   </body>
