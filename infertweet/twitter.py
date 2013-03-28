@@ -177,8 +177,8 @@ class Stream(object):
             consumer_secret = config.get('twitter', 'consumer_secret')
             access_token = config.get('twitter', 'access_token')
             access_token_secret = config.get('twitter', 'access_token_secret')
-        elif not (consumer_key and consumer_secret and
-                  access_token and access_token_secret):
+        if not (consumer_key and consumer_secret and
+                access_token and access_token_secret):
             raise ValueError('Missing Twitter credentials')
         # Number of seconds to wait after an exception before restarting.
         self.tcpip_delay = self.TCPIP_STEP
