@@ -3,7 +3,8 @@
   <head>
     <meta charset="utf-8">
     <title>InferTweet</title>
-    <link rel=StyleSheet href="{{ static_url("style.css") }}" type="text/css" media=screen>
+    <link rel=StyleSheet href="{{ static_url("style.css") }}" type="text/css"
+          media=screen>
   </head>
 
   <body>
@@ -11,7 +12,8 @@
       <div id="mainbody">
         <h1>InferTweet</h1>
         <form action="sentiment/" method="get">
-          <input type="text" id="query" name="q" autofocus="autofocus" placeholder="Type a sentence or paste a tweet ...">
+          <input type="text" id="query" name="q" autofocus="autofocus"
+                 placeholder="Type a sentence or paste a tweet ...">
           <input type="submit" value="Estimate Tone">
         </form>
       </div>

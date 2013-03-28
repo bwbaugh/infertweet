@@ -3,7 +3,8 @@
   <head>
     <meta charset="utf-8">
     <title>InferTweet | Sentiment</title>
-    <link rel=StyleSheet href="{{ static_url("style.css") }}" type="text/css" media=screen>
+    <link rel=StyleSheet href="{{ static_url("style.css") }}" type="text/css"
+          media=screen>
   </head>
 
   <body>
@@ -11,7 +12,8 @@
       <div id="mainbody">
         <h1>InferTweet</h1>
         <form method="get">
-          <input type="text" id="query" name="q" autofocus="autofocus" value="{{ query }}">
+          <input type="text" id="query" name="q" autofocus="autofocus"
+                 value="{{ query }}">
           <input type="submit" value="Estimate Tone">
         </form>
         <section id="results">
@@ -29,7 +31,8 @@
           <section>
             <h1>Features:</h1><br>
             {% for (feature, f_label, f_prob) in features %}
-            <span style="color: {{ color_code(f_label, f_prob) }}" title="{{ '{}: {:.2%}'.format(f_label, f_prob) }}">
+            <span style="color: {{ color_code(f_label, f_prob) }}"
+                  title="{{ '{}: {:.2%}'.format(f_label, f_prob) }}">
               {{ feature }}
             </span>
             {% end %}
