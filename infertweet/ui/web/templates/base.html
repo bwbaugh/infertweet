@@ -15,6 +15,12 @@
         <footer>
           <small>
             Copyright &copy; 2013 Wesley Baugh.
+            {% if git_commit %}
+            Version
+            <a href="https://github.com/bwbaugh/infertweet/commit/{{ git_commit }}">
+              {{ git_commit[:7] }}</a>
+            (view on GitHub).
+            {% end %}
           </small>
         </footer>
       </div>
