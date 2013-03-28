@@ -11,6 +11,7 @@ import tornado.web
 import tornado.httpserver
 
 from infertweet.config import get_config
+from infertweet.twitter import Twitter
 
 
 class MainHandler(tornado.web.RequestHandler):
@@ -30,6 +31,7 @@ class SentimentQueryHandler(tornado.web.RequestHandler):
     def initialize(self):
         self.git_version = self.application.settings.get('git_version')
         self.web_query_log = self.application.settings.get('web_query_log')
+        self.twitter = self.application.settings.get('twitter')
         self.rpc = self.application.settings.get('rpc_server')
         self.extract = self.rpc.root.extract
         self.subjective_classify = self.rpc.root.subjective_classify
@@ -102,11 +104,20 @@ class SentimentQueryHandler(tornado.web.RequestHandler):
     def get(self):
         query = self.get_argument('q')
         texts, features_list, labels, probabilities = [], [], [], []
-        texts.append(query)
-        features, label, probability = self.process_query(query)
-        features_list.append(features)
-        labels.append(label)
-        probabilities.append(probability)
+        if len(query.split()) <= 3 and len(query) <= 30:
+            results = self.twitter.search(q=query, lang='en', rpp=50)
+            for tweet in results:
+                texts.append(tweet.text)
+                features, label, probability = self.process_query(tweet.text)
+                features_list.append(features)
+                labels.append(label)
+                probabilities.append(probability)
+        else:
+            texts.append(query)
+            features, label, probability = self.process_query(query)
+            features_list.append(features)
+            labels.append(label)
+            probabilities.append(probability)
         self.render("sentiment.html",
                     query=query,
                     texts=texts,
@@ -157,7 +168,7 @@ def get_git_version():
     return git_version, git_commit
 
 
-def start_server(config, git_version):
+def start_server(config, twitter, git_version):
     application = tornado.web.Application(
         [(r"/", MainHandler),
          (r"/sentiment/", SentimentQueryHandler)],
@@ -166,6 +177,7 @@ def start_server(config, git_version):
         gzip=config.getboolean('web', 'gzip'),
         debug=config.getboolean('web', 'debug'),
         web_query_log=config.get('sentiment', 'web_query_log'),
+        twitter=twitter,
         rpc_server=get_rpc_server(config),
         git_version=git_version)
     http_server = tornado.httpserver.HTTPServer(application, xheaders=True)
@@ -181,8 +193,10 @@ def main():
         print 'Version: {0} ({1})'.format(git_version, git_commit)
     else:
         print 'Could not detect current Git commit.'
+    twitter = Twitter(config=config)
     print 'Starting web server on port {}'.format(config.getint('web', 'port'))
-    start_server(config=config, git_version=(git_version, git_commit))
+    start_server(config=config, twitter=twitter,
+                 git_version=(git_version, git_commit))
 
 if __name__ == '__main__':
     main()

@@ -4,6 +4,7 @@ import Queue
 import time
 import socket
 import httplib
+import warnings
 
 from tweepy import OAuthHandler
 from tweepy import Stream as TweepyStream
@@ -105,6 +106,35 @@ class Tweet(Status):
     def parse(cls, data, api=_API):
         """Parse a JSON string into a Tweet / Status object."""
         return super(Tweet, cls).parse(api, json.loads(data))
+
+
+class Twitter(tweepy_api):
+    def __init__(self, consumer_key=None, consumer_secret=None,
+                 access_token=None, access_token_secret=None, config=None):
+        """Creates a new Twitter API object.
+
+        Args:
+            consumer_key: String for authenticating with Twitter.
+            consumer_secret: String for authenticating with Twitter.
+            access_token: String for authenticating with Twitter.
+            access_token_secret: String for authenticating with Twitter.
+            config: ConfigParser object with all of the above parameters
+                under a 'twitter' section.
+        """
+        if config:
+            consumer_key = config.get('twitter', 'consumer_key')
+            consumer_secret = config.get('twitter', 'consumer_secret')
+            access_token = config.get('twitter', 'access_token')
+            access_token_secret = config.get('twitter', 'access_token_secret')
+        if not (consumer_key and consumer_secret and
+                access_token and access_token_secret):
+            if config:
+                warnings.warn('Twitter credentials from config file missing.')
+            else:
+                raise ValueError('Missing Twitter credentials')
+        auth = OAuthHandler(consumer_key, consumer_secret)
+        auth.set_access_token(access_token, access_token_secret)
+        super(Twitter, self).__init__(auth)
 
 
 class Stream(object):

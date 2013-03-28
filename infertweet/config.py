@@ -47,6 +47,12 @@ def create_default_config():
     config.set('stanford', 'corpus',
                'PATH/training.1600000.processed.noemoticon.shuffled.csv')
 
+    config.add_section('twitter')
+    config.set('twitter', 'consumer_key', '')
+    config.set('twitter', 'consumer_secret', '')
+    config.set('twitter', 'access_token', '')
+    config.set('twitter', 'access_token_secret', '')
+
     config.add_section('twitter_corpus')
     config.set('twitter_corpus', 'emoticons', 'PATH/twitter-sentiment.json.bz2')
 
