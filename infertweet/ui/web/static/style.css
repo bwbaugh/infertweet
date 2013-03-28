@@ -24,8 +24,14 @@ div#mainbody {
     height: 100%;
 }
 
-section#results {
+div#result{
     padding-top: 1em;
+}
+
+section#query h1{
+    font-size: 1em;
+    margin: 0;
+    display: inline;
 }
 
 #results p {
@@ -38,7 +44,7 @@ section#results {
     display: inline;
 }
 
-#query {
+input#query {
     font-size: 1.8em;
     width: 100%;
 }

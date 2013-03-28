@@ -10,26 +10,35 @@ InferTweet | Sentiment
          value="{{ query }}">
   <input type="submit" value="Estimate Tone">
 </form>
+<section id="query">
+  <h1>Query:</h1>
+  {{ query }}
+</section>
 <section id="results">
-  <section>
-    <h1>Query:</h1>
-    {{ query }}
-  </section>
-  <section>
-    <h1>Sentiment:</h1>
-    <span style="color: {{ color_code(label, probability) }}">
-      {{ label }}
-    </span>
-    ({{ '{:.2%}'.format(probability) }})
-  </section>
-  <section>
-    <h1>Features:</h1><br>
-    {% for (feature, f_label, f_prob) in features %}
-    <span style="color: {{ color_code(f_label, f_prob) }}"
-          title="{{ '{}: {:.2%}'.format(f_label, f_prob) }}">
-      {{ feature }}
-    </span>
-    {% end %}
-  </section>
+  {% for (text, features, label, probability) in zip(texts, features_list,
+                                                     labels, probabilities) %}
+  <div id="result">
+    <section>
+      <h1>Text:</h1>
+      {{ text }}
+    </section>
+    <section>
+      <h1>Sentiment:</h1>
+      <span style="color: {{ color_code(label, probability) }}">
+        {{ label }}
+      </span>
+      ({{ '{:.2%}'.format(probability) }})
+    </section>
+    <section>
+      <h1>Features:</h1><br>
+      {% for (feature, f_label, f_prob) in features %}
+      <span style="color: {{ color_code(f_label, f_prob) }}"
+            title="{{ '{}: {:.2%}'.format(f_label, f_prob) }}">
+        {{ feature }}
+      </span>
+      {% end %}
+    </section>
+  </div>
+  {% end %}
 </section>
 {% end %}

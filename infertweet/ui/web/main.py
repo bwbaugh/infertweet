@@ -101,13 +101,19 @@ class SentimentQueryHandler(tornado.web.RequestHandler):
 
     def get(self):
         query = self.get_argument('q')
+        texts, features_list, labels, probabilities = [], [], [], []
+        texts.append(query)
         features, label, probability = self.process_query(query)
+        features_list.append(features)
+        labels.append(label)
+        probabilities.append(probability)
         self.render("sentiment.html",
                     query=query,
-                    label=label,
-                    probability=probability,
+                    texts=texts,
+                    labels=labels,
+                    probabilities=probabilities,
                     color_code=color_code,
-                    features=features,
+                    features_list=features_list,
                     git_version=self.git_version)
         self.log_query(label, probability, query)
 
