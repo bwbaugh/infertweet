@@ -21,7 +21,10 @@
           </p>
           <p>
             <h1>Sentiment:</h1>
-            <span style="color: {{ color_code(label, probability) }}">{{ label }}</span> ({{ '{:.2%}'.format(probability) }})
+            <span style="color: {{ color_code(label, probability) }}">
+              {{ label }}
+            </span>
+            ({{ '{:.2%}'.format(probability) }})
           </p>
           <p>
             <h1>Features:</h1><br>
