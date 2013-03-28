@@ -15,25 +15,25 @@
           <input type="submit" value="Estimate Tone">
         </form>
         <div id="results">
-          <p>
+          <section>
             <h1>Query:</h1>
             {{ query }}
-          </p>
-          <p>
+          </section>
+          <section>
             <h1>Sentiment:</h1>
             <span style="color: {{ color_code(label, probability) }}">
               {{ label }}
             </span>
             ({{ '{:.2%}'.format(probability) }})
-          </p>
-          <p>
+          </section>
+          <section>
             <h1>Features:</h1><br>
             {% for (feature, f_label, f_prob) in features %}
             <span style="color: {{ color_code(f_label, f_prob) }}" title="{{ '{}: {:.2%}'.format(f_label, f_prob) }}">
               {{ feature }}
             </span>
             {% end %}
-          </p>
+          </section>
         </div>
       </div>
     </div>
