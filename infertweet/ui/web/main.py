@@ -2,6 +2,7 @@
 """Web interface allowing users to submit queries and get a response."""
 import os
 import colorsys
+import multiprocessing
 import subprocess
 from datetime import datetime
 
@@ -30,7 +31,7 @@ class SentimentQueryHandler(tornado.web.RequestHandler):
 
     def initialize(self):
         self.git_version = self.application.settings.get('git_version')
-        self.web_query_log = self.application.settings.get('web_query_log')
+        self.log_queue = self.application.settings.get('log_queue')
         self.twitter = self.application.settings.get('twitter')
         self.rpc = self.application.settings.get('rpc_server')
         self.extract = self.rpc.root.extract
@@ -89,11 +90,7 @@ class SentimentQueryHandler(tornado.web.RequestHandler):
             str(probability),
             query.encode('utf-8')])
         print message
-        try:
-            with open(self.web_query_log, mode='a') as f:
-                f.write(message + '\n')
-        except:
-            pass
+        self.log_queue.put(message)
 
     def process_query(self, query):
         features = self.extract(query)
@@ -168,7 +165,26 @@ def get_git_version():
     return git_version, git_commit
 
 
+def log_worker(log_queue, web_query_log):
+    while 1:
+        message = log_queue.get()
+        if message is None:
+            return
+        try:
+            with open(web_query_log, mode='a') as f:
+                f.write(message + '\n')
+        except Exception as e:
+            print 'log_worker:Exception:{0!r}'.format(e)
+
+
 def start_server(config, twitter, git_version):
+    # Start the log-writer process.
+    log_queue = multiprocessing.Queue()
+    args = (log_queue, config.get('sentiment', 'web_query_log'))
+    log_process = multiprocessing.Process(target=log_worker, args=args)
+    log_process.daemon = True
+    log_process.start()
+
     application = tornado.web.Application(
         [(r"/", MainHandler),
          (r"/sentiment/", SentimentQueryHandler)],
@@ -176,13 +192,21 @@ def start_server(config, twitter, git_version):
         static_path=os.path.join(os.path.dirname(__file__), 'static'),
         gzip=config.getboolean('web', 'gzip'),
         debug=config.getboolean('web', 'debug'),
-        web_query_log=config.get('sentiment', 'web_query_log'),
+        log_queue=log_queue,
         twitter=twitter,
         rpc_server=get_rpc_server(config),
         git_version=git_version)
     http_server = tornado.httpserver.HTTPServer(application, xheaders=True)
     http_server.listen(config.getint('web', 'port'))
-    tornado.ioloop.IOLoop.instance().start()
+
+    try:
+        tornado.ioloop.IOLoop.instance().start()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        log_queue.put(None)
+        log_queue.close()
+        log_process.join()
 
 
 def main():
