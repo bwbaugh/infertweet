@@ -76,7 +76,7 @@ class SentimentQueryHandler(tornado.web.RequestHandler):
             predicted_features.append((feature, label, probability))
         return predicted_features
 
-    def log_query(self, label, probability, query):
+    def log_query(self, query):
         """Log the query to a file."""
         try:
             client_ip = self.request.headers['X-Real-Ip']
@@ -86,8 +86,6 @@ class SentimentQueryHandler(tornado.web.RequestHandler):
         message = '\t'.join([
             str(datetime.utcnow()) + ' +0000',
             client_ip,
-            label,
-            str(probability),
             query.encode('utf-8')])
         print message
         self.log_queue.put(message)
@@ -123,7 +121,7 @@ class SentimentQueryHandler(tornado.web.RequestHandler):
                     color_code=color_code,
                     features_list=features_list,
                     git_version=self.git_version)
-        self.log_query(label, probability, query)
+        self.log_query(query)
 
 
 def color_code(label, probability):
