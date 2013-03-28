@@ -16,15 +16,15 @@
         </form>
         <div id="results">
           <p>
-            <strong>Query:</strong>
+            <h1>Query:</h1>
             {{ query }}
           </p>
           <p>
-            <strong>Sentiment:</strong>
+            <h1>Sentiment:</h1>
             <span style="color: {{ color_code(label, probability) }}">{{ label }}</span> ({{ '{:.2%}'.format(probability) }})
           </p>
           <p>
-            <strong>Features:</strong><br>
+            <h1>Features:</h1><br>
             {% for (feature, f_label, f_prob) in features %}
             <span style="color: {{ color_code(f_label, f_prob) }}" title="{{ '{}: {:.2%}'.format(f_label, f_prob) }}">
               {{ feature }}

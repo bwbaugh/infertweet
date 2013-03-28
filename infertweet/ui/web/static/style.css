@@ -28,6 +28,12 @@ div#results {
     margin: 0;
 }
 
+#results h1 {
+    font-size: 1em;
+    margin: 0;
+    display: inline;
+}
+
 #query {
     font-size: 1.8em;
     width: 100%;
