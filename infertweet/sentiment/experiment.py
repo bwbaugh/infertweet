@@ -4,7 +4,7 @@ import json
 from pprint import pprint
 
 from infertweet.config import get_config
-from infertweet.semeval import task_b_generator, evaluate
+from infertweet.corpus.semeval import task_b_generator, evaluate
 
 
 def write_semeval_predictions(experiment, final=False):
