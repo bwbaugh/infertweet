@@ -5,7 +5,7 @@ Infer information from Tweets. Useful for human-centered computing
 tasks, such as sentiment analysis, location prediction, authorship
 profiling and more!
 
-[![Build Status](https://travis-ci.org/bwbaugh/infertweet.png?branch=master)](https://travis-ci.org/bwbaugh/infertweet)
+[![Build Status][]][]
 
 Sentiment Analysis
 ------------------
@@ -99,3 +99,6 @@ GET `http://.../api/sentiment/classify.json?text=Today+is+March+30%2C+2013.`
         "confidence": 0.9876479882432573,
         "label": "neutral"
     }
+
+  [Build Status]: https://travis-ci.org/bwbaugh/infertweet.png?branch=master
+  [![Build Status][]]: https://travis-ci.org/bwbaugh/infertweet
