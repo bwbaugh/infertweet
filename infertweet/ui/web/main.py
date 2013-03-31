@@ -26,8 +26,8 @@ class MainHandler(tornado.web.RequestHandler):
         self.render("index.html", git_version=self.git_version)
 
 
-class SentimentQueryHandler(tornado.web.RequestHandler):
-    """Handles sentiment queries and displays response."""
+class SentimentRequestHandler(tornado.web.RequestHandler):
+    """Base class for sentimen request handlers."""
 
     def initialize(self):
         self.git_version = self.application.settings.get('git_version')
@@ -95,6 +95,10 @@ class SentimentQueryHandler(tornado.web.RequestHandler):
         label, probability = self.predict(features)
         features = self.get_conditionals(features)
         return features, label, probability
+
+
+class SentimentQueryHandler(SentimentRequestHandler):
+    """Handles sentiment queries and displays response."""
 
     def get(self):
         query = self.get_argument('q')
