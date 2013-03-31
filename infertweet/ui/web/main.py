@@ -95,7 +95,7 @@ class SentimentRequestHandler(tornado.web.RequestHandler):
         features = self.extract(query)
         label, probability = self.predict(features)
         features = self.get_conditionals(features)
-        return features, label, probability
+        return query, features, label, probability
 
 
 class SentimentQueryHandler(SentimentRequestHandler):
@@ -125,19 +125,21 @@ class SentimentQueryHandler(SentimentRequestHandler):
                 self.count = 50
             self._twitter_search()
         else:
-            features, label, probability = self.process_query(self.query)
-            result = (self.query, features, label, probability)
+            result = self.process_query(self.query)
             self._on_results([result])
 
     def _twitter_search(self):
-        """Get matching tweets from Twitter and classify each one."""
-        results = []
+        """Get matching tweets from Twitter."""
         twitter_results = self.twitter.search(q=self.query,
                                               rpp=self.count,
                                               lang='en')
+        self._process_twitter(twitter_results)
+
+    def _process_twitter(self, twitter_results):
+        """Classify each tweet returned by Twitter."""
+        results = []
         for tweet in twitter_results:
-            features, label, probability = self.process_query(tweet.text)
-            result = (tweet.text, features, label, probability)
+            result = self.process_query(tweet.text)
             results.append(result)
         self._on_results(results)
 
