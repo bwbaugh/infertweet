@@ -103,28 +103,21 @@ class SentimentQueryHandler(SentimentRequestHandler):
 
     def get(self):
         query = self.get_argument('q')
-        texts, features_list, labels, probabilities = [], [], [], []
+        results = []
         if len(query.split()) <= 3 and len(query) <= 30:
-            results = self.twitter.search(q=query, lang='en', rpp=50)
-            for tweet in results:
-                texts.append(tweet.text)
+            twitter_results = self.twitter.search(q=query, lang='en', rpp=50)
+            for tweet in twitter_results:
                 features, label, probability = self.process_query(tweet.text)
-                features_list.append(features)
-                labels.append(label)
-                probabilities.append(probability)
+                result = (tweet.text, features, label, probability)
+                results.append(result)
         else:
-            texts.append(query)
             features, label, probability = self.process_query(query)
-            features_list.append(features)
-            labels.append(label)
-            probabilities.append(probability)
+            result = (query, features, label, probability)
+            results.append(result)
         self.render("sentiment.html",
                     query=query,
-                    texts=texts,
-                    labels=labels,
-                    probabilities=probabilities,
+                    results=results,
                     color_code=color_code,
-                    features_list=features_list,
                     git_version=self.git_version)
         self.log_query(query)
 

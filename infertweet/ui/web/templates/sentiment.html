@@ -15,8 +15,7 @@ InferTweet | Sentiment
   {{ query }}
 </section>
 <section id="results">
-  {% for (text, features, label, probability) in zip(texts, features_list,
-                                                     labels, probabilities) %}
+  {% for (text, features, label, probability) in results %}
   <div id="result">
     <section>
       <h1>Text:</h1>
