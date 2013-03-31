@@ -111,11 +111,18 @@ class SentimentQueryHandler(SentimentRequestHandler):
                 keywords, the query must be 3 words or less and must be
                 less than 30 characters, otherwise the string is assumed
                 to be a single document.
+            count: The number of tweets to request from Twitter that
+                match the keywords in `q`. If specified, the
+                `q`-parameter is forced to be interpreted as keywords.
+                Maximum value is 100, defaults to 50.
         """
         query = self.get_argument('q')
+        count = self.get_argument('count', default=None)
         results = []
-        if len(query.split()) <= 3 and len(query) <= 30:
-            twitter_results = self.twitter.search(q=query, lang='en', rpp=50)
+        if count or (len(query.split()) <= 3 and len(query) <= 30):
+            if count is None:
+                count = 50
+            twitter_results = self.twitter.search(q=query, lang='en', rpp=count)
             for tweet in twitter_results:
                 features, label, probability = self.process_query(tweet.text)
                 result = (tweet.text, features, label, probability)
