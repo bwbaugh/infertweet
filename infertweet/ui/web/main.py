@@ -2,6 +2,7 @@
 """Web interface allowing users to submit queries and get a response."""
 import os
 import colorsys
+import json
 import multiprocessing
 import subprocess
 from datetime import datetime
@@ -128,6 +129,55 @@ class SentimentQueryHandler(SentimentRequestHandler):
         self.log_query(query)
 
 
+class SentimentAPIHandler(SentimentRequestHandler):
+    """Handles sentiment API requests.
+
+    Resource URL:
+        http://.../api/sentiment/service_name.json
+    """
+
+    def get(self, service):
+        """Handles GET API requests.
+
+        Args:
+            service: The name of the GET-service requested. Currently
+                the only valid GET-service name is 'classify', which
+                will classify a single document (tweet).
+
+        GET Parameters:
+            text: String representing the document to be classified.
+
+        Returns:
+            JSON dictionary of the classification results.
+
+            Fields:
+                text: String of the original input text.
+                label: String of the sentiment classification label.
+                confidence: Float of the confidence in the label.
+
+            For example:
+
+            {
+                "text": "Today is March 30, 2013.",
+                "confidence": 0.9876479882432573,
+                "label": "neutral"
+            }
+
+        Raises:
+            tornado.web.HTTPError: If the `service` name is unexpected.
+        """
+        if service != 'classify':
+            raise tornado.web.HTTPError(404)
+
+        self.set_header('Content-Type', 'application/json')
+
+        text = self.get_argument('text')
+        features, label, confidence = self.process_query(text)
+        result = {'text': text, 'label': label, 'confidence': confidence}
+        self.write(json.dumps(result))
+        self.log_query(text)
+
+
 def color_code(label, probability):
     """Converts float [0.0 - 1.0] to HTML color code."""
     if label == 'neutral':
@@ -189,7 +239,8 @@ def start_server(config, twitter, git_version):
 
     application = tornado.web.Application(
         [(r"/", MainHandler),
-         (r"/sentiment/", SentimentQueryHandler)],
+         (r"/sentiment/", SentimentQueryHandler),
+         (r"/api/sentiment/([^/.]+).json", SentimentAPIHandler)],
         template_path=os.path.join(os.path.dirname(__file__), 'templates'),
         static_path=os.path.join(os.path.dirname(__file__), 'static'),
         gzip=config.getboolean('web', 'gzip'),

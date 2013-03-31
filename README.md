@@ -71,3 +71,31 @@ application that depends on the classifier needs to restart or update.
 
 We have added a very simple web interface that allows users to query the
 system. Lots of upcoming features are planned for the web interface.
+
+### RESTful JSON API
+
+#### GET sentiment/classify
+
+##### Resource URL
+
+http://.../api/sentiment/classify.json
+
+##### Parameters
+
+- text: String representing the document to be classified.
+
+##### Response object fields
+
+- text: String of the original input text.
+- label: String of the sentiment classification label.
+- confidence: Float of the confidence in the label.
+
+##### Example request
+
+GET `http://.../api/sentiment/classify.json?text=Today+is+March+30%2C+2013.`
+
+    {
+        "text": "Today is March 30, 2013.",
+        "confidence": 0.9876479882432573,
+        "label": "neutral"
+    }
