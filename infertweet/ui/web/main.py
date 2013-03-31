@@ -5,6 +5,7 @@ import colorsys
 import json
 import multiprocessing
 import subprocess
+import threading
 from datetime import datetime
 
 import rpyc
@@ -123,7 +124,7 @@ class SentimentQueryHandler(SentimentRequestHandler):
                           len(self.query) <= 30):
             if self.count is None:
                 self.count = 50
-            self._twitter_search()
+            threading.Thread(target=self._twitter_search).start()
         else:
             result = self.process_query(self.query)
             self._on_results([result])
