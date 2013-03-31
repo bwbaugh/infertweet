@@ -201,7 +201,7 @@ class SentimentAPIHandler(SentimentRequestHandler):
         self.set_header('Content-Type', 'application/json')
 
         text = self.get_argument('text')
-        features, label, confidence = self.process_query(text)
+        text, features, label, confidence = self.process_query(text)
         result = {'text': text, 'label': label, 'confidence': confidence}
         self.write(json.dumps(result))
         self.log_query(text)
