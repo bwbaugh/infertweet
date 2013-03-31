@@ -102,6 +102,16 @@ class SentimentQueryHandler(SentimentRequestHandler):
     """Handles sentiment queries and displays response."""
 
     def get(self):
+        """Handles GET sentiment query requests.
+
+        GET Parameters:
+            q: String of either the keywords to use for retrieving
+                matching tweets from Twitter, or the text of a single
+                document (tweet) to be classified. To be considered as
+                keywords, the query must be 3 words or less and must be
+                less than 30 characters, otherwise the string is assumed
+                to be a single document.
+        """
         query = self.get_argument('q')
         results = []
         if len(query.split()) <= 3 and len(query) <= 30:
