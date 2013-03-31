@@ -101,6 +101,7 @@ class SentimentRequestHandler(tornado.web.RequestHandler):
 class SentimentQueryHandler(SentimentRequestHandler):
     """Handles sentiment queries and displays response."""
 
+    @tornado.web.asynchronous
     def get(self):
         """Handles GET sentiment query requests.
 
@@ -116,27 +117,42 @@ class SentimentQueryHandler(SentimentRequestHandler):
                 `q`-parameter is forced to be interpreted as keywords.
                 Maximum value is 100, defaults to 50.
         """
-        query = self.get_argument('q')
-        count = self.get_argument('count', default=None)
-        results = []
-        if count or (len(query.split()) <= 3 and len(query) <= 30):
-            if count is None:
-                count = 50
-            twitter_results = self.twitter.search(q=query, lang='en', rpp=count)
-            for tweet in twitter_results:
-                features, label, probability = self.process_query(tweet.text)
-                result = (tweet.text, features, label, probability)
-                results.append(result)
+        self.query = self.get_argument('q')
+        self.count = self.get_argument('count', default=None)
+        if self.count or (len(self.query.split()) <= 3 and
+                          len(self.query) <= 30):
+            if self.count is None:
+                self.count = 50
+            self._twitter_search()
         else:
-            features, label, probability = self.process_query(query)
-            result = (query, features, label, probability)
+            features, label, probability = self.process_query(self.query)
+            result = (self.query, features, label, probability)
+            self._on_results([result])
+
+    def _twitter_search(self):
+        """Get matching tweets from Twitter and classify each one."""
+        results = []
+        twitter_results = self.twitter.search(q=self.query,
+                                              rpp=self.count,
+                                              lang='en')
+        for tweet in twitter_results:
+            features, label, probability = self.process_query(tweet.text)
+            result = (tweet.text, features, label, probability)
             results.append(result)
+        self._on_results(results)
+
+    def _on_results(self, results):
+        """Display the final results to the user.
+
+        Args:
+            results: List of tuples of the text, features, label, probability.
+        """
         self.render("sentiment.html",
-                    query=query,
+                    query=self.query,
                     results=results,
                     color_code=color_code,
                     git_version=self.git_version)
-        self.log_query(query)
+        self.log_query(self.query)
 
 
 class SentimentAPIHandler(SentimentRequestHandler):
