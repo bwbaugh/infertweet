@@ -4,7 +4,6 @@
 # bug with multiprocessing that prevents it from working under Windows.
 import json
 import multiprocessing
-from collections import namedtuple
 
 from infer.nlp import FeatureExtractor
 
@@ -14,9 +13,6 @@ from infertweet.sentiment.experiment import (
     SingleClassifier, HierarchicalClassifier, run_experiment, tokenizer,
     parse_performance)
 from infertweet.sentiment.plot import start_plot
-
-
-Pickled = namedtuple('Pickled', 'extractor classifier')
 
 
 def main():

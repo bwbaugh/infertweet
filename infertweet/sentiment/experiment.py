@@ -6,6 +6,7 @@ try:
     import cPickle as pickle
 except ImportError:
     import pickle
+from collections import namedtuple
 from pprint import pprint
 
 from infer.classify import MultinomialNB
@@ -15,6 +16,9 @@ import infertweet.corpus.semeval as semeval
 import infertweet.corpus.stanford as stanford140
 from infertweet.config import get_config
 from infertweet.corpus.semeval import task_b_generator, evaluate
+
+
+Pickled = namedtuple('Pickled', 'extractor classifier')
 
 
 class TrainWikipedia(Experiment):
