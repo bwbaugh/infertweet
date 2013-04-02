@@ -55,8 +55,8 @@ class SentimentRequestHandler(tornado.web.RequestHandler):
         probability = self.subjective_conditional(feature, 'neutral')
         total = probability + self.subjective_conditional(feature, 'subjective')
         probability /= total
-        if probability < 0.5:
-            return 'neutral', 1 - probability
+        if probability >= 0.5:
+            return 'neutral', probability
         else:
             label, probability = self.polarity_classify(feature)
             probability = self.polarity_conditional(feature, 'positive')
