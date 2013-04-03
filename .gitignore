@@ -12,4 +12,4 @@ cover/
 
 # Project created files
 infertweet.ini
-web_log_queries.txt
+web_log_queries*.txt

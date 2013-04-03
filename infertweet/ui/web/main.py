@@ -3,10 +3,10 @@
 import os
 import colorsys
 import json
-import multiprocessing
+import logging
+import socket
 import subprocess
 import threading
-from datetime import datetime
 
 import rpyc
 import tornado.ioloop
@@ -33,7 +33,6 @@ class SentimentRequestHandler(tornado.web.RequestHandler):
 
     def initialize(self):
         self.git_version = self.application.settings.get('git_version')
-        self.log_queue = self.application.settings.get('log_queue')
         self.twitter = self.application.settings.get('twitter')
         self.rpc = self.application.settings.get('rpc_server')
         self.extract = self.rpc.root.extract
@@ -77,20 +76,6 @@ class SentimentRequestHandler(tornado.web.RequestHandler):
             label, probability = self.conditional((feature, ))
             predicted_features.append((feature, label, probability))
         return predicted_features
-
-    def log_query(self, query):
-        """Log the query to a file."""
-        try:
-            client_ip = self.request.headers['X-Real-Ip']
-        except KeyError:
-            client_ip = self.request.remote_ip
-
-        message = '\t'.join([
-            str(datetime.utcnow()) + ' +0000',
-            client_ip,
-            query.encode('utf-8')])
-        print message
-        self.log_queue.put(message)
 
     def process_query(self, query):
         features = self.extract(query)
@@ -155,7 +140,6 @@ class SentimentQueryHandler(SentimentRequestHandler):
                     results=results,
                     color_code=color_code,
                     git_version=self.git_version)
-        self.log_query(self.query)
 
 
 class SentimentAPIHandler(SentimentRequestHandler):
@@ -204,7 +188,6 @@ class SentimentAPIHandler(SentimentRequestHandler):
         text, features, label, confidence = self.process_query(text)
         result = {'text': text, 'label': label, 'confidence': confidence}
         self.write(json.dumps(result))
-        self.log_query(text)
 
 
 def color_code(label, probability):
@@ -246,26 +229,7 @@ def get_git_version():
     return git_version, git_commit
 
 
-def log_worker(log_queue, web_query_log):
-    while 1:
-        message = log_queue.get()
-        if message is None:
-            return
-        try:
-            with open(web_query_log, mode='a') as f:
-                f.write(message + '\n')
-        except Exception as e:
-            print 'log_worker:Exception:{0!r}'.format(e)
-
-
 def start_server(config, twitter, git_version):
-    # Start the log-writer process.
-    log_queue = multiprocessing.Queue()
-    args = (log_queue, config.get('sentiment', 'web_query_log'))
-    log_process = multiprocessing.Process(target=log_worker, args=args)
-    log_process.daemon = True
-    log_process.start()
-
     application = tornado.web.Application(
         [(r"/", MainHandler),
          (r"/sentiment/", SentimentQueryHandler),
@@ -274,7 +238,6 @@ def start_server(config, twitter, git_version):
         static_path=os.path.join(os.path.dirname(__file__), 'static'),
         gzip=config.getboolean('web', 'gzip'),
         debug=config.getboolean('web', 'debug'),
-        log_queue=log_queue,
         twitter=twitter,
         rpc_server=get_rpc_server(config),
         git_version=git_version)
@@ -285,22 +248,57 @@ def start_server(config, twitter, git_version):
         tornado.ioloop.IOLoop.instance().start()
     except KeyboardInterrupt:
         pass
-    finally:
-        log_queue.put(None)
-        log_queue.close()
-        log_process.join()
+
+
+def setup_logging(config):
+    if config.getboolean('web', 'debug'):
+        log_level = logging.DEBUG
+    else:
+        log_level = logging.INFO
+
+    logger = logging.getLogger('')  # Root logger.
+    logger.setLevel(log_level)
+
+    console = logging.StreamHandler()
+    console.setLevel(log_level)
+    console_formatter = logging.Formatter(
+        fmt='%(asctime)s|%(levelname)s|%(name)s|%(message)s',
+        datefmt='%m-%d %H:%M:%S')
+    console.setFormatter(console_formatter)
+    logger.addHandler(console)
+
+    web_query_log = config.get('sentiment', 'web_query_log')
+    # Add the system's hostname before the file extension.
+    web_query_log = (web_query_log[:-3] + socket.gethostname() +
+                     web_query_log[-4:])
+
+    file_handler = logging.FileHandler(web_query_log)
+    file_handler.setLevel(log_level)
+    file_formatter = logging.Formatter(
+        fmt='%(asctime)s.%(msecs)d\t%(levelname)s\t%(name)s\t%(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S')
+    file_handler.setFormatter(file_formatter)
+    logger.addHandler(file_handler)
 
 
 def main():
     """Starts the web server as a user interface to the system."""
     config = get_config()
+
+    setup_logging(config)
+
+    logger = logging.getLogger('ui.web')
+
     git_version, git_commit = get_git_version()
     if git_version:
-        print 'Version: {0} ({1})'.format(git_version, git_commit)
+        logger.info('Version: {0} ({1})'.format(git_version, git_commit))
     else:
-        print 'Could not detect current Git commit.'
+        logger.warning('Could not detect current Git commit.')
+
     twitter = Twitter(config=config)
-    print 'Starting web server on port {}'.format(config.getint('web', 'port'))
+
+    logger.info('Starting web server on port {}'.format(config.getint('web',
+                                                                      'port')))
     start_server(config=config, twitter=twitter,
                  git_version=(git_version, git_commit))
 
