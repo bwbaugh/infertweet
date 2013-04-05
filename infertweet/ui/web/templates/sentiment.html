@@ -15,11 +15,21 @@ InferTweet | Sentiment
   {{ query }}
 </section>
 <section id="results">
-  {% for (text, features, label, probability) in results %}
+  {% for result in results %}
+  {% if tweets %}
+  {% set (tweet, features, label, probability) = result %}
+  {% else %}
+  {% set (text, features, label, probability) = result %}
+  {% end %}
   <div id="result">
     <section>
+      {% if tweets %}
+      <h1>Tweet:</h1><br>
+      <blockquote class="twitter-tweet"><p>{{ tweet.text }}</p>&mdash; {{ tweet.from_user_name }}(@{{ tweet.from_user }}) <a href="https://twitter.com/{{ tweet.from_user }}/status/{{ tweet.id }}">{{  tweet.created_at }}</a></blockquote>
+      {% else %}
       <h1>Text:</h1>
       {{ text }}
+      {% end %}
     </section>
     <section>
       <h1>Sentiment:</h1>
@@ -40,4 +50,6 @@ InferTweet | Sentiment
   </div>
   {% end %}
 </section>
+
+<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
 {% end %}

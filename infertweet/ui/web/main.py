@@ -107,10 +107,12 @@ class SentimentQueryHandler(SentimentRequestHandler):
         self.count = self.get_argument('count', default=None)
         if self.count or (len(self.query.split()) <= 3 and
                           len(self.query) <= 30):
+            self.tweets = True
             if self.count is None:
                 self.count = 50
             threading.Thread(target=self._twitter_search).start()
         else:
+            self.tweets = False
             result = self.process_query(self.query)
             self._on_results([result])
 
@@ -126,6 +128,7 @@ class SentimentQueryHandler(SentimentRequestHandler):
         results = []
         for tweet in twitter_results:
             result = self.process_query(tweet.text)
+            result = (tweet, ) + result[1:]
             results.append(result)
         self._on_results(results)
 
@@ -133,11 +136,15 @@ class SentimentQueryHandler(SentimentRequestHandler):
         """Display the final results to the user.
 
         Args:
-            results: List of tuples of the text, features, label, probability.
+            results: List of tuples. If self.tweets, then the tuple
+            consists of (tweet, features, label, probability), where
+            `tweet` is a Tweepy `SearchResult` object, otherwise the
+            `tweet` is replaced with a simple `text` string.
         """
         self.render("sentiment.html",
                     query=self.query,
                     results=results,
+                    tweets=self.tweets,
                     color_code=color_code,
                     git_version=self.git_version)
 
