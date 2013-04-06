@@ -28,6 +28,11 @@ div#result{
     padding-top: 1em;
 }
 
+.result-tweet {
+    display: inline-block;
+    padding: 1em;
+}
+
 section#query h1{
     font-size: 1em;
     margin: 0;
