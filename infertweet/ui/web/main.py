@@ -2,6 +2,7 @@
 """Web interface allowing users to submit queries and get a response."""
 import os
 import colorsys
+import datetime
 import json
 import logging
 import socket
@@ -87,6 +88,12 @@ class SentimentRequestHandler(tornado.web.RequestHandler):
 class SentimentQueryHandler(SentimentRequestHandler):
     """Handles sentiment queries and displays response."""
 
+    def initialize(self):
+        super(SentimentQueryHandler, self).initialize()
+        self.twitter_cache = self.application.settings.get('twitter_cache')
+        self.twitter_cache_seconds = self.application.settings.get(
+            'twitter_cache_seconds')
+
     @tornado.web.asynchronous
     def get(self):
         """Handles GET sentiment query requests.
@@ -116,11 +123,26 @@ class SentimentQueryHandler(SentimentRequestHandler):
             result = self.process_query(self.query)
             self._on_results([result])
 
+    def _twitter_cache_update(self):
+        """Remove items from the cache that have expired."""
+        for query in self.twitter_cache.keys():
+            cache_time, twitter_results = self.twitter_cache[query]
+            now = datetime.datetime.now()
+            if (now - cache_time >
+                    datetime.timedelta(seconds=self.twitter_cache_seconds)):
+                del self.twitter_cache[query]
+
     def _twitter_search(self):
         """Get matching tweets from Twitter."""
-        twitter_results = self.twitter.search(q=self.query,
-                                              rpp=self.count,
-                                              lang='en')
+        self._twitter_cache_update()
+        if self.query in self.twitter_cache:
+            cache_time, twitter_results = self.twitter_cache[self.query]
+        else:
+            twitter_results = self.twitter.search(q=self.query,
+                                                  rpp=self.count,
+                                                  lang='en')
+            cache_time = datetime.datetime.now()
+            self.twitter_cache[self.query] = (cache_time, twitter_results)
         self._process_twitter(twitter_results)
 
     def _process_twitter(self, twitter_results):
@@ -275,6 +297,8 @@ def start_server(config, twitter, git_version):
         gzip=config.getboolean('web', 'gzip'),
         debug=config.getboolean('web', 'debug'),
         twitter=twitter,
+        twitter_cache=dict(),
+        twitter_cache_seconds=config.getint('web', 'twitter_cache_seconds'),
         rpc_server=get_rpc_server(config),
         git_version=git_version)
     http_server = tornado.httpserver.HTTPServer(application, xheaders=True)

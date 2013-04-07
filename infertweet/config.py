@@ -60,6 +60,7 @@ def create_default_config():
     config.set('web', 'port', '8080')
     config.set('web', 'gzip', 'true')
     config.set('web', 'debug', 'true')
+    config.set('web', 'twitter_cache_seconds', '60')
 
     return config
 
