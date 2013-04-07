@@ -162,13 +162,18 @@ class SentimentMisclassifiedHandler(SentimentRequestHandler):
         text = self.get_argument('text')
         flag = self.get_argument('flag').lower()
 
+        # Classify the text to get the currently assigned label.
+        text, features, label, probability = self.process_query(text)
+        if flag == label:  # A valid flag can't be the current label.
+            raise tornado.web.HTTPError(409)  # 409 Conflict
+
         self.render("misclassified.html",
                     text=text,
                     flag=flag,
                     git_version=self.git_version)
 
         logger = logging.getLogger('ui.web.sentiment.misclassified')
-        logger.info('\t'.join([flag, text]))
+        logger.info('\t'.join([flag, label, text]))
 
 
 class SentimentAPIHandler(SentimentRequestHandler):
