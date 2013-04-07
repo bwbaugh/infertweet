@@ -8,6 +8,7 @@ InferTweet | Sentiment | Misclassification
 <h2>Sentiment Misclassification Report</h2>
 
 <p>Thank you for the report!</p>
-<p>The following text has been flagged as <strong>{{ flag }}</strong>:</p>
+<p>The following text has been flagged as <strong>
+  <span style="color: {{ color_code(flag, 1.0) }}">{{ flag }}</span></strong>:</p>
 <p>{{ text }}</p>
 {% end %}

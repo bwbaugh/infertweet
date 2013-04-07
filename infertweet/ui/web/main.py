@@ -170,6 +170,7 @@ class SentimentMisclassifiedHandler(SentimentRequestHandler):
         self.render("misclassified.html",
                     text=text,
                     flag=flag,
+                    color_code=color_code,
                     git_version=self.git_version)
 
         logger = logging.getLogger('ui.web.sentiment.misclassified')
