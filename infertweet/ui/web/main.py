@@ -149,6 +149,28 @@ class SentimentQueryHandler(SentimentRequestHandler):
                     git_version=self.git_version)
 
 
+class SentimentMisclassifiedHandler(SentimentRequestHandler):
+    """Handles sentiment misclassification reports."""
+
+    def get(self):
+        """Handles GET sentiment misclassification requests.
+
+        GET Parameters:
+            text: String of the text that was misclassified.
+            flag: String of the reported correct class label.
+        """
+        text = self.get_argument('text')
+        flag = self.get_argument('flag').lower()
+
+        self.render("misclassified.html",
+                    text=text,
+                    flag=flag,
+                    git_version=self.git_version)
+
+        logger = logging.getLogger('ui.web.sentiment.misclassified')
+        logger.info('\t'.join([flag, text]))
+
+
 class SentimentAPIHandler(SentimentRequestHandler):
     """Handles sentiment API requests.
 
@@ -240,6 +262,7 @@ def start_server(config, twitter, git_version):
     application = tornado.web.Application(
         [(r"/", MainHandler),
          (r"/sentiment/", SentimentQueryHandler),
+         (r"/sentiment/misclassified", SentimentMisclassifiedHandler),
          (r"/api/sentiment/([^/.]+).json", SentimentAPIHandler)],
         template_path=os.path.join(os.path.dirname(__file__), 'templates'),
         static_path=os.path.join(os.path.dirname(__file__), 'static'),

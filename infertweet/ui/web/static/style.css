@@ -33,6 +33,23 @@ div#result{
     padding: 1em;
 }
 
+.flag {
+    display: inline-block;
+    color: gray;
+    font-size: 0.75em;
+}
+
+.flag a:link,
+.flag a:visited,
+.flag a:hover,
+.flag a:active {
+    color: gray;
+}
+
+form.misclassified {
+    display: inline-block;
+}
+
 section#query h1{
     font-size: 1em;
     margin: 0;

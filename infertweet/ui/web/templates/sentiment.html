@@ -36,6 +36,20 @@ InferTweet | Sentiment
           </a>
         </blockquote>
       </div>
+      <div class="flag">
+        {% set flags = []; labels = ('neutral', 'positive', 'negative') %}
+        {% for flag in (x for x in labels if x != label) %}
+        {% set flags.append("""
+        <form action="misclassified" method="get" target="_blank"
+              class="misclassified">
+          <input type="hidden" name="text" value="{text}">
+          <input type="hidden" name="flag" value="{flag}">
+          <a href="#" onclick="parentNode.submit(); return false;">{flag}</a>
+        </form>
+        """.format(text=tweet.text.encode('utf-8'), flag=flag.capitalize())) %}
+        {% end %}
+        Flag as: {% raw ' | '.join(flags) %}
+      </div>
       {% else %}
       <h1>Text:</h1>
       {{ text }}

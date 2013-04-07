@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}
+InferTweet | Sentiment | Misclassification
+{% end %}
+
+{% block content %}
+<h2>Sentiment Misclassification Report</h2>
+
+<p>Thank you for the report!</p>
+<p>The following text has been flagged as <strong>{{ flag }}</strong>:</p>
+<p>{{ text }}</p>
+{% end %}
