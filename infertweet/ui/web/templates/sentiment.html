@@ -18,6 +18,7 @@ InferTweet | Sentiment
   {% for result in results %}
   {% if tweets %}
   {% set (tweet, features, label, probability) = result %}
+  {% set text = tweet.text %}
   {% else %}
   {% set (text, features, label, probability) = result %}
   {% end %}
@@ -36,6 +37,10 @@ InferTweet | Sentiment
           </a>
         </blockquote>
       </div>
+      {% else %}
+      <h1>Text:</h1>
+      {{ text }}
+      {% end %}
       <div class="flag">
         {% set flags = []; labels = ('neutral', 'positive', 'negative') %}
         {% for flag in (x for x in labels if x != label) %}
@@ -46,14 +51,10 @@ InferTweet | Sentiment
           <input type="hidden" name="flag" value="{flag}">
           <a href="#" onclick="parentNode.submit(); return false;">{flag}</a>
         </form>
-        """.format(text=tweet.text.encode('utf-8'), flag=flag.capitalize())) %}
+        """.format(text=text.encode('utf-8'), flag=flag.capitalize())) %}
         {% end %}
         Flag as: {% raw ' | '.join(flags) %}
       </div>
-      {% else %}
-      <h1>Text:</h1>
-      {{ text }}
-      {% end %}
     </section>
     <section>
       <h1>Sentiment:</h1>
