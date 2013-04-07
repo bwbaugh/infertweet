@@ -51,7 +51,8 @@ InferTweet | Sentiment
           <input type="hidden" name="flag" value="{flag}">
           <a href="#" onclick="parentNode.submit(); return false;">{flag}</a>
         </form>
-        """.format(text=text.encode('utf-8'), flag=flag.capitalize())) %}
+        """.format(text=escape(text.encode('utf-8')),
+                   flag=flag.capitalize())) %}
         {% end %}
         Flag as: {% raw ' | '.join(flags) %}
       </div>
