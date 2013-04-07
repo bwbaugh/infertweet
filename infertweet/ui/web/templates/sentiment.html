@@ -25,8 +25,16 @@ InferTweet | Sentiment
     <section>
       {% if tweets %}
       <h1>Tweet:</h1><br>
-      <div class="result-tweet" style="background-color: {{ color_code(label, probability) }}">
-        <blockquote class="twitter-tweet"><p>{{ tweet.text }}</p>&mdash; {{ tweet.from_user_name }}(@{{ tweet.from_user }}) <a href="https://twitter.com/{{ tweet.from_user }}/status/{{ tweet.id }}">{{  tweet.created_at }}</a></blockquote>
+      <div class="result-tweet"
+           style="background-color: {{ color_code(label, probability) }}">
+        <blockquote class="twitter-tweet">
+          <p>
+            {{ tweet.text }}
+          </p>&mdash; {{ tweet.from_user_name }}(@{{ tweet.from_user }})
+          <a href="https://twitter.com/{{ tweet.from_user }}/status/{{ tweet.id }}">
+            {{  tweet.created_at }}
+          </a>
+        </blockquote>
       </div>
       {% else %}
       <h1>Text:</h1>
