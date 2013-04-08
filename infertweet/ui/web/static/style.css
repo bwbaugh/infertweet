@@ -29,6 +29,8 @@ div#stats{
 }
 
 div#chart_overall_count {
+    background-color: darkgray;
+    padding: 1em;
     width: 500px;
     height: 300px;
 }
