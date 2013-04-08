@@ -1,6 +1,7 @@
 # Copyright (C) 2013 Brian Wesley Baugh
 """Web interface allowing users to submit queries and get a response."""
 import os
+import collections
 import colorsys
 import datetime
 import json
@@ -167,6 +168,7 @@ class SentimentQueryHandler(SentimentRequestHandler):
                     query=self.query,
                     results=results,
                     tweets=self.tweets,
+                    overall_count=collections.Counter(x[2] for x in results),
                     color_code=color_code,
                     git_version=self.git_version)
 

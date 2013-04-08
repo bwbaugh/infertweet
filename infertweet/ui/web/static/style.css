@@ -24,6 +24,15 @@ div#mainbody {
     height: 100%;
 }
 
+div#stats{
+    padding-top: 1em;
+}
+
+div#chart_overall_count {
+    width: 500px;
+    height: 300px;
+}
+
 div#result{
     padding-top: 1em;
 }

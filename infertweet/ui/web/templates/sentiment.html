@@ -15,6 +15,12 @@ InferTweet | Sentiment
   {{ query }}
 </section>
 <section id="results">
+  {% if tweets %}
+  <div id='stats'>
+    <h1>Overall Statistics:</h1>
+    <div id='chart_overall_count'></div>
+  </div>
+  {% end %}
   {% for result in results %}
   {% if tweets %}
   {% set (tweet, features, label, probability) = result %}
@@ -78,4 +84,26 @@ InferTweet | Sentiment
 </section>
 
 <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+{% if tweets %}
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+<script type="text/javascript">
+  google.load("visualization", "1", {packages:["corechart"]});
+  google.setOnLoadCallback(drawChart);
+  function drawChart() {
+    var data = google.visualization.arrayToDataTable([
+      ['Sentiment', 'Count'],
+      {% for s_label in overall_count %}
+      ['{{ s_label }}', {{ overall_count[s_label] }}],
+      {% end %}
+    ]);
+
+    var options = {
+      title: 'Tweet Sentiment Counts',
+    };
+
+    var chart = new google.visualization.ColumnChart(document.getElementById('chart_overall_count'));
+    chart.draw(data, options);
+  }
+</script>
+{% end %}
 {% end %}
