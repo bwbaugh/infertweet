@@ -91,14 +91,15 @@ InferTweet | Sentiment
   google.setOnLoadCallback(drawChart);
   function drawChart() {
     var data = google.visualization.arrayToDataTable([
-      ['Sentiment', 'Count'],
-      {% for s_label in overall_count %}
-      ['{{ s_label }}', {{ overall_count[s_label] }}],
-      {% end %}
+      ['Subjectivity', 'Neutral', 'Negative', 'Positive'],
+      ['Objective', {{ overall_count['neutral'] }}, 0, 0],
+      ['Subjective', 0, {{ overall_count['negative'] }}, {{ overall_count['positive'] }}],
     ]);
 
     var options = {
       title: 'Number of Tweets by Sentiment',
+      isStacked: true,
+      colors: ['#0077CC', '#c00000', '#00c000']
     };
 
     var chart = new google.visualization.BarChart(document.getElementById('chart_overall_count'));
