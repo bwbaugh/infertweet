@@ -25,12 +25,16 @@ class MainHandler(tornado.web.RequestHandler):
     def initialize(self):
         self.git_version = self.application.settings.get('git_version')
 
+    def head(self, *args):
+        """Handle HEAD requests by sending an identical GET response."""
+        self.get(*args)
+
     def get(self):
         """Renders the query input page."""
         self.render("index.html", git_version=self.git_version)
 
 
-class SentimentRequestHandler(tornado.web.RequestHandler):
+class SentimentRequestHandler(MainHandler):
     """Base class for sentimen request handlers."""
 
     def initialize(self):
