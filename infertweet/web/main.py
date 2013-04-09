@@ -176,10 +176,10 @@ class SentimentQueryHandler(SentimentRequestHandler):
 class SentimentMisclassifiedHandler(SentimentRequestHandler):
     """Handles sentiment misclassification reports."""
 
-    def get(self):
-        """Handles GET sentiment misclassification requests.
+    def post(self):
+        """Handles POST sentiment misclassification requests.
 
-        GET Parameters:
+        POST Parameters:
             text: String of the text that was misclassified.
             flag: String of the reported correct class label.
         """

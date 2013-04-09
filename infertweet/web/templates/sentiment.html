@@ -51,7 +51,7 @@ InferTweet | Sentiment
         {% set flags = []; labels = ('neutral', 'positive', 'negative') %}
         {% for flag in (x for x in labels if x != label) %}
         {% set flags.append("""
-        <form action="misclassified" method="get" target="_blank"
+        <form action="misclassified" method="post" target="_blank"
               class="misclassified">
           <input type="hidden" name="text" value="{text}">
           <input type="hidden" name="flag" value="{flag}">
