@@ -141,6 +141,7 @@ class SentimentQueryHandler(SentimentRequestHandler):
         else:
             twitter_results = self.twitter.search(q=self.query,
                                                   rpp=self.count,
+                                                  result_type='recent',
                                                   lang='en')
             cache_time = datetime.datetime.now()
             self.twitter_cache[self.query] = (cache_time, twitter_results)
