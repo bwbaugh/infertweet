@@ -107,7 +107,7 @@ class SentimentQueryHandler(SentimentRequestHandler):
             q: String of either the keywords to use for retrieving
                 matching tweets from Twitter, or the text of a single
                 document (tweet) to be classified. To be considered as
-                keywords, the query must be 3 words or less and must be
+                keywords, the query must be 4 words or less and must be
                 less than 30 characters, otherwise the string is assumed
                 to be a single document.
             count: The number of tweets to request from Twitter that
@@ -117,7 +117,7 @@ class SentimentQueryHandler(SentimentRequestHandler):
         """
         self.query = self.get_argument('q')
         self.count = self.get_argument('count', default=None)
-        if self.count or (len(self.query.split()) <= 3 and
+        if self.count or (len(self.query.split()) <= 4 and
                           len(self.query) <= 30):
             self.tweets = True
             if self.count is None:
