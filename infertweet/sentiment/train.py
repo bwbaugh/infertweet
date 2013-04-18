@@ -10,9 +10,9 @@ from infer.nlp import FeatureExtractor
 import infertweet.corpus.semeval as semeval
 from infertweet.config import get_config
 from infertweet.sentiment.experiment import (
-    SingleClassifier, HierarchicalClassifier, run_experiment, tokenizer,
-    parse_performance)
+    SingleClassifier, HierarchicalClassifier, run_experiment, parse_performance)
 from infertweet.sentiment.plot import start_plot
+from infertweet.sentiment.tokenizer import tokenizer
 
 
 def main():

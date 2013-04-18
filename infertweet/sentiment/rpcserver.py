@@ -13,7 +13,7 @@ from infertweet.config import get_config
 
 # Load requirements of the pickled classifier.
 from collections import namedtuple
-from infertweet.sentiment.experiment import tokenizer
+from infertweet.sentiment.tokenizer import tokenizer
 
 
 def main():
