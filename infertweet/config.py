@@ -38,9 +38,9 @@ def create_default_config():
     config.set('sentiment', 'chunk_size', '5000')
     config.set('sentiment', 'first_chunk', '100')
     config.set('sentiment', 'titles',
-               '("Single Classifier", "Hierarchical Classifier")')
+               '["Single Classifier", "Hierarchical Classifier"]')
     config.set('sentiment', 'labels',
-               '("SemEval", "Positive", "Negative", "Neutral", "Accuracy")')
+               '["SemEval", "Positive", "Negative", "Neutral", "Accuracy"]')
     config.set('sentiment', 'test_scale', '1')
 
     config.add_section('stanford')
