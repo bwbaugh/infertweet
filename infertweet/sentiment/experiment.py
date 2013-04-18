@@ -246,22 +246,36 @@ def preprocess(document):
     pre_dates(document)
 
 
-def create_tokens(document):
-    """Extract tokens from a pre-processed document."""
-    tokens = document.split(' ')
+def analyze_tokens(tokens):
+    """Analyze tokens to extract additional features."""
+    features = []
+    return features
 
+
+def process_tokens(tokens):
+    """Process and filter tokens."""
     for i, token in enumerate(tokens):
         token = shorten_repeated_chars(token)
     tokens = [x for x in tokens if x]
-
     return tokens
 
 
 def tokenizer(document):
-    """Create feature tokens from an unprocessed document."""
+    """Create feature tokens from an unprocessed document.
+
+    Args:
+        document: Original raw string of a document.
+
+    Returns:
+        Tuple containing ordered tokens suitable for n-grams, and
+        unordered features that were extracted and are not suitable for
+        use with n-grams.
+    """
     preprocess(document)
-    tokens = create_tokens(document)
-    return tokens
+    tokens = document.split(' ')
+    analysis_features = analyze_tokens(tokens)
+    tokens = process_tokens(tokens)
+    return tokens, analysis_features
 
 
 def write_semeval_predictions(experiment, final=False):
