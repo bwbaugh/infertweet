@@ -199,17 +199,23 @@ def parse_performance(performance):
         return data
 
 
-def tokenizer(document):
-    # USERNAMES ( !!! VERY BAD DO NOT USE !!! )
-    # document = re.sub(r'@([A-Za-z0-9_]+)', '__USERNAME__', document)
-    # URL GOOD
+def pre_usernames(document):
+    """Fold @usernames to `__USERNAME__`."""
+    return re.sub(r'@([A-Za-z0-9_]+)', '__USERNAME__', document)
+
+
+def pre_urls(document):
+    """Fold URLs to `__URL__`."""
     document = re.sub(
         r"""(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.]"""
         r"""[a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+"""
         r"""\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|"""
         r"""[^\s`!()\[\]{};:'".,<>?]))""", '__URL__', document)
-    # DATE
-    # "big" boost at 150k (0.5723 semeval, space around, 0.570 w/o)
+    return document
+
+
+def pre_dates(document):
+    """Fold detected dates to `__DATE__`."""
     # Source: http://stackoverflow.com/a/3810334/1988505
     # capital R because of sublime-text-2 syntax highlighting problem.
     document = re.sub(
@@ -226,34 +232,35 @@ def tokenizer(document):
         ){3}                  # do this three times
         \b                    # and end at a word boundary.""",
         ' __DATE__ ', document)
+    return document
 
-    # exclamation_count = document.count('!')
+
+def shorten_repeated_chars(token):
+    """Shorten repeated chars (haaaaaaate -> haate)."""
+    return re.sub(r"(\w)\1{2,}", r'\1\1', token)
+
+
+def preprocess(document):
+    """Preprocess a document."""
+    pre_urls(document)
+    pre_dates(document)
+
+
+def create_tokens(document):
+    """Extract tokens from a pre-processed document."""
     tokens = document.split(' ')
-    # NEGATE = "not n't".split(' ')
-    # previous_was_not = False
-    # REPEATED CHARS CURRENTLY REDUCES PERFORMANCE
-    # repeated_chars = []
+
     for i, token in enumerate(tokens):
-        # Shorten repeated chars (haaaaaaate -> haate)
-        # SUB SO FAR BEST at 135k
-        token, num_subs = re.subn(r"(\w)\1{2,}", r'\1\1', token)
-        # if num_subs:
-        #     repeated_chars.append('__num_subs({0})__'.format(num_subs))
-        # if previous_was_not and token not in NEGATE:
-        #     token = 'not_' + token
-        # previous_was_not = token in NEGATE
-        # FLOAT mixed results (0.573 semev at 135k)
-        # try:
-        #     float(token)
-        # except:
-        #     pass
-        # else:
-        #     token = '__FLOAT__'
-        # tokens[i] = token
+        token = shorten_repeated_chars(token)
     tokens = [x for x in tokens if x]
-    # tokens.extend(repeated_chars)
-    # EXCLAMATION (hurt performance, down to 0.527 semev)
-    # tokens.append('__EXCLAMATION({0})__'.format(exclamation_count))
+
+    return tokens
+
+
+def tokenizer(document):
+    """Create feature tokens from an unprocessed document."""
+    preprocess(document)
+    tokens = create_tokens(document)
     return tokens
 
 
