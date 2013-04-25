@@ -124,6 +124,11 @@ class SentimentQueryHandler(SentimentRequestHandler):
         # Check arguments, otherwise send Bad Request.
         if not self.query:
             raise tornado.web.HTTPError(400, 'Missing argument q')
+        if self.count:
+            try:
+                self.count = int(self.count)
+            except ValueError:
+                raise tornado.web.HTTPError(400, 'count argument not an integer')
 
         # Send to Twitter or classify as is.
         if self.count or (len(self.query.split()) <= 4 and
