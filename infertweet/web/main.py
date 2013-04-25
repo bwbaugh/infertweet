@@ -120,10 +120,15 @@ class SentimentQueryHandler(SentimentRequestHandler):
             result_type: String specifying what type of search result
                 you would prefer to receive. Must be one of either
                 'mixed', 'recent' or 'popular'. (default 'recent')
+            sort: If present will cause the results to be sorted
+                according to their confidence value. Sort order defaults
+                to descending, but the special value 'ascending' is
+                allowed to reverse the sort order.
         """
         self.query = normalize_text(self.get_argument('q'))
         self.count = self.get_argument('count', default=None)
         self.result_type = self.get_argument('result_type', default='recent')
+        self.sort = self.get_argument('sort', default=False)
 
         # Check arguments, otherwise send Bad Request.
         if not self.query:
@@ -178,6 +183,9 @@ class SentimentQueryHandler(SentimentRequestHandler):
             result = self.process_query(normalize_text(tweet.text))
             result = (tweet, ) + result[1:]
             results.append(result)
+        if self.sort:
+            order = self.sort != 'ascending'  # Default descending.
+            results.sort(key=operator.itemgetter(3), reverse=order)
         self._on_results(results)
 
     def _on_results(self, results):
