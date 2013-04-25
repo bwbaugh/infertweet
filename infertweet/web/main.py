@@ -117,7 +117,7 @@ class SentimentQueryHandler(SentimentRequestHandler):
                 `q`-parameter is forced to be interpreted as keywords.
                 Maximum value is 100, defaults to 50.
         """
-        self.query = unidecode(self.get_argument('q'))
+        self.query = normalize_text(self.get_argument('q'))
         self.count = self.get_argument('count', default=None)
         if self.count or (len(self.query.split()) <= 4 and
                           len(self.query) <= 30):
@@ -157,7 +157,7 @@ class SentimentQueryHandler(SentimentRequestHandler):
         """Classify each tweet returned by Twitter."""
         results = []
         for tweet in twitter_results:
-            result = self.process_query(unidecode(tweet.text))
+            result = self.process_query(normalize_text(tweet.text))
             result = (tweet, ) + result[1:]
             results.append(result)
         self._on_results(results)
@@ -199,7 +199,7 @@ class SentimentMisclassifiedHandler(SentimentRequestHandler):
             text: String of the text that was misclassified.
             flag: String of the reported correct class label.
         """
-        text = unidecode(self.get_argument('text'))
+        text = normalize_text(self.get_argument('text'))
         flag = self.get_argument('flag').lower()
 
         # Classify the text to get the currently assigned label.
@@ -277,10 +277,25 @@ class SentimentAPIHandler(SentimentRequestHandler):
 
         self.set_header('Content-Type', 'application/json')
 
-        text = unidecode(self.get_argument('text'))
+        text = normalize_text(self.get_argument('text'))
         text, features, label, confidence = self.process_query(text)
         result = {'text': text, 'label': label, 'confidence': confidence}
         self.write(json.dumps(result))
+
+
+def normalize_text(text):
+    """Normalize text.
+
+    Args:
+        text: String to normalize.
+
+    Returns:
+        String of the normalized version of the input text.
+    """
+    text = unidecode(text)
+    text = text.replace('\n', ' ')
+    text = text.replace('\r', ' ')
+    return text
 
 
 def color_code(label, probability):
