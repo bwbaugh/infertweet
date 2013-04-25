@@ -117,9 +117,13 @@ class SentimentQueryHandler(SentimentRequestHandler):
                 match the keywords in `q`. If specified, the
                 `q`-parameter is forced to be interpreted as keywords.
                 Maximum value is 100, defaults to 50.
+            result_type: String specifying what type of search result
+                you would prefer to receive. Must be one of either
+                'mixed', 'recent' or 'popular'. (default 'recent')
         """
         self.query = normalize_text(self.get_argument('q'))
         self.count = self.get_argument('count', default=None)
+        self.result_type = self.get_argument('result_type', default='recent')
 
         # Check arguments, otherwise send Bad Request.
         if not self.query:
@@ -129,6 +133,8 @@ class SentimentQueryHandler(SentimentRequestHandler):
                 self.count = int(self.count)
             except ValueError:
                 raise tornado.web.HTTPError(400, 'count argument not an integer')
+        if self.result_type not in set(['mixed', 'recent', 'popular']):
+            raise tornado.web.HTTPError(400, 'Invalid value for result_type')
 
         # Send to Twitter or classify as is.
         if self.count or (len(self.query.split()) <= 4 and
@@ -159,7 +165,7 @@ class SentimentQueryHandler(SentimentRequestHandler):
         else:
             twitter_results = self.twitter.search(q=self.query,
                                                   rpp=self.count,
-                                                  result_type='recent',
+                                                  result_type=self.result_type,
                                                   lang='en')
             cache_time = datetime.datetime.now()
             self.twitter_cache[self.query] = (cache_time, twitter_results)
@@ -212,10 +218,14 @@ class ActiveLearningHandler(SentimentQueryHandler):
                 Maximum value is 100, defaults to 100.
             top: Number of most uncertain tweets to show user.
                 (default 10).
+            result_type: String specifying what type of search result
+                you would prefer to receive. Must be one of either
+                'mixed', 'recent' or 'popular'. (default 'recent')
         """
         self.query = self.get_argument('q', default='since:1970-01-02')
         self.count = self.get_argument('count', default=100)
         self.top = self.get_argument('top', default=10)
+        self.result_type = self.get_argument('result_type', default='recent')
 
         # Check arguments, otherwise send Bad Request.
         try:
@@ -223,6 +233,8 @@ class ActiveLearningHandler(SentimentQueryHandler):
             self.top = int(self.top)
         except ValueError:
             raise tornado.web.HTTPError(400, 'Could not parse integer')
+        if self.result_type not in set(['mixed', 'recent', 'popular']):
+            raise tornado.web.HTTPError(400, 'Invalid value for result_type')
 
         threading.Thread(target=self._twitter_active).start()
 
@@ -269,7 +281,7 @@ class ActiveLearningHandler(SentimentQueryHandler):
         # Get a sample of recent tweets.
         twitter_results = self.twitter.search(q=self.query,
                                               rpp=self.count,
-                                              result_type='recent',
+                                              result_type=self.result_type,
                                               lang='en')
         # Classify each tweet.
         results = []
