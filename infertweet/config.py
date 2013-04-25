@@ -61,6 +61,7 @@ def create_default_config():
     config.set('web', 'gzip', 'true')
     config.set('web', 'debug', 'true')
     config.set('web', 'twitter_cache_seconds', '60')
+    config.set('web', 'misclassified_file', 'misclassified.txt')
 
     return config
 

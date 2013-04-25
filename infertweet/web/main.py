@@ -179,7 +179,16 @@ class SentimentQueryHandler(SentimentRequestHandler):
 
 
 class SentimentMisclassifiedHandler(SentimentRequestHandler):
-    """Handles sentiment misclassification reports."""
+    """Handles sentiment misclassification reports.
+
+    Attributes:
+        misclassified: Filename to log misclassifications to.
+    """
+
+    def initialize(self):
+        super(SentimentMisclassifiedHandler, self).initialize()
+        self.logger = logging.getLogger('ui.web.sentiment.misclassified')
+        self.misclassified = self.application.settings.get('misclassified_file')
 
     def post(self):
         """Handles POST sentiment misclassification requests.
@@ -202,8 +211,21 @@ class SentimentMisclassifiedHandler(SentimentRequestHandler):
                     color_code=color_code,
                     git_version=self.git_version)
 
-        logger = logging.getLogger('ui.web.sentiment.misclassified')
-        logger.info('\t'.join([flag, label, text]))
+        self._log_misclassified(flag, label, text)
+
+    def _log_misclassified(self, flag, mislabel, text):
+        """Log misclassification to a file.
+
+        Args:
+            flag: Correct class label.
+            mislabel: Incorrect current label.
+            text: Text of the document.
+        """
+        self.logger.info('\t'.join([flag, mislabel, text]))
+        date = str(datetime.datetime.now())
+        user = self.request.remote_ip
+        with open(self.misclassified, mode='a') as f:
+            f.write('\t'.join([date, user, flag, mislabel, text]) + '\n')
 
 
 class SentimentAPIHandler(SentimentRequestHandler):
@@ -306,6 +328,7 @@ def start_server(config, twitter, git_version):
         twitter=twitter,
         twitter_cache=dict(),
         twitter_cache_seconds=config.getint('web', 'twitter_cache_seconds'),
+        misclassified_file=config.get('web', 'misclassified_file'),
         rpc_server=get_rpc_server(config),
         git_version=git_version)
     http_server = tornado.httpserver.HTTPServer(application, xheaders=True)
