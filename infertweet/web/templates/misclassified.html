@@ -8,8 +8,20 @@ InferTweet | Sentiment | Misclassification
 <h2>Sentiment Misclassification Report</h2>
 
 <p>Thank you for the report!</p>
+{% if useful %}
 <p>The following text has been flagged as <strong>
   <span style="color: {{ color_code(flag, 1.0) }}">{{ flag }}</span></strong>:</p>
 <p>{{ text }}</p>
-<p>The system has learned from your report and will be better in the future.</p>
+<p>The system has learned from the report and will be better in the future.</p>
+{% else %}
+<p>
+  Unfortunately, the submitted report is invalid.<br>
+  The text flagged as {{ flag }} is already classified correctly by the system.
+</p>
+<p>
+  Usually this happens when the system learns from a recent report that
+  causes other text to be classified differently.<br>
+  Refreshing the original page should show the updated label.
+</p>
+{% end %}
 {% end %}

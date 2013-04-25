@@ -206,15 +206,16 @@ class SentimentMisclassifiedHandler(SentimentRequestHandler):
         features = self.extract(text)
         label, probability = self.predict(features)
         if flag == label:  # A valid flag can't be the current label.
-            raise tornado.web.HTTPError(409)  # 409 Conflict
-
-        # Log the report.
-        self._log_misclassified(flag, label, text)
-
-        # Update the online classifier using this new example.
-        self.train((features, flag))
+            useful = False
+        else:
+            useful = True
+            # Log the report.
+            self._log_misclassified(flag, label, text)
+            # Update the online classifier using this new example.
+            self.train((features, flag))
 
         self.render("misclassified.html",
+                    useful=useful,
                     text=text,
                     flag=flag,
                     color_code=color_code,
