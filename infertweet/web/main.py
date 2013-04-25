@@ -200,11 +200,15 @@ class ActiveLearningHandler(SentimentQueryHandler):
         """Handles GET active learning requests.
 
         GET Parameters:
+            q: String of the search operators (usually keywords) to use
+                for retrieving matching tweets from Twitter.
+                (default "since:1970-01-02")
             count: The number of tweets to request from Twitter.
                 Maximum value is 100, defaults to 100.
             top: Number of most uncertain tweets to show user.
                 (default 10).
         """
+        self.query = self.get_argument('q', default='since:1970-01-02')
         self.count = self.get_argument('count', default=100)
         self.top = self.get_argument('top', default=10)
 
@@ -258,7 +262,7 @@ class ActiveLearningHandler(SentimentQueryHandler):
     def _twitter_active(self):
         """Select tweets for use in active learning."""
         # Get a sample of recent tweets.
-        twitter_results = self.twitter.search(q='since:1970-01-02',
+        twitter_results = self.twitter.search(q=self.query,
                                               rpp=self.count,
                                               result_type='recent',
                                               lang='en')
