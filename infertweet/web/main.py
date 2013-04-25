@@ -14,6 +14,7 @@ import rpyc
 import tornado.ioloop
 import tornado.web
 import tornado.httpserver
+from unidecode import unidecode
 
 from infertweet.config import get_config
 from infertweet.twitter import Twitter
@@ -116,7 +117,7 @@ class SentimentQueryHandler(SentimentRequestHandler):
                 `q`-parameter is forced to be interpreted as keywords.
                 Maximum value is 100, defaults to 50.
         """
-        self.query = self.get_argument('q')
+        self.query = unidecode(self.get_argument('q'))
         self.count = self.get_argument('count', default=None)
         if self.count or (len(self.query.split()) <= 4 and
                           len(self.query) <= 30):
@@ -156,7 +157,7 @@ class SentimentQueryHandler(SentimentRequestHandler):
         """Classify each tweet returned by Twitter."""
         results = []
         for tweet in twitter_results:
-            result = self.process_query(tweet.text)
+            result = self.process_query(unidecode(tweet.text))
             result = (tweet, ) + result[1:]
             results.append(result)
         self._on_results(results)
@@ -198,7 +199,7 @@ class SentimentMisclassifiedHandler(SentimentRequestHandler):
             text: String of the text that was misclassified.
             flag: String of the reported correct class label.
         """
-        text = self.get_argument('text')
+        text = unidecode(self.get_argument('text'))
         flag = self.get_argument('flag').lower()
 
         # Classify the text to get the currently assigned label.
@@ -276,7 +277,7 @@ class SentimentAPIHandler(SentimentRequestHandler):
 
         self.set_header('Content-Type', 'application/json')
 
-        text = self.get_argument('text')
+        text = unidecode(self.get_argument('text'))
         text, features, label, confidence = self.process_query(text)
         result = {'text': text, 'label': label, 'confidence': confidence}
         self.write(json.dumps(result))
