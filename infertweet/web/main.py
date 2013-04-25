@@ -1,11 +1,12 @@
 # Copyright (C) 2013 Brian Wesley Baugh
 """Web interface allowing users to submit queries and get a response."""
-import os
 import collections
 import colorsys
 import datetime
 import json
 import logging
+import operator
+import os
 import socket
 import subprocess
 import threading
@@ -186,6 +187,110 @@ class SentimentQueryHandler(SentimentRequestHandler):
                     git_version=self.git_version)
 
 
+class ActiveLearningHandler(SentimentQueryHandler):
+    """Handles active learning request and displays uncertain instances."""
+
+    def initialize(self):
+        super(ActiveLearningHandler, self).initialize()
+        self.logger = logging.getLogger('ui.web.sentiment.active')
+        self.active = self.application.settings.get('active_file')
+
+    @tornado.web.asynchronous
+    def get(self):
+        """Handles GET active learning requests.
+
+        GET Parameters:
+            count: The number of tweets to request from Twitter.
+                Maximum value is 100, defaults to 100.
+            top: Number of most uncertain tweets to show user.
+                (default 10).
+        """
+        self.count = self.get_argument('count', default=100)
+        self.top = self.get_argument('top', default=10)
+
+        # Check arguments, otherwise send Bad Request.
+        try:
+            self.count = int(self.count)
+            self.top = int(self.top)
+        except ValueError:
+            raise tornado.web.HTTPError(400, 'Could not parse integer')
+
+        threading.Thread(target=self._twitter_active).start()
+
+    def post(self):
+        """Handles POST active learning reports.
+
+        POST Parameters:
+            text: String of the text to use for training.
+            flag: String of the oracle chosen class label.
+        """
+        text = normalize_text(self.get_argument('text'))
+        flag = self.get_argument('flag').lower()
+
+        # Classify the text to get the currently assigned label.
+        features = self.extract(text)
+        label, probability = self.predict(features)
+        # Log the report.
+        self._log_active(flag, label, text)
+        # Update the online classifier using this new example.
+        self.train((features, flag))
+
+        self.render("active-thanks.html",
+                    text=text,
+                    flag=flag,
+                    color_code=color_code,
+                    git_version=self.git_version)
+
+    def _log_active(self, flag, original, text):
+        """Log active learning reports to a file.
+
+        Args:
+            flag: Correct class label.
+            original: Incorrect current label.
+            text: Text of the document.
+        """
+        self.logger.info('\t'.join([flag, original, text]))
+        date = str(datetime.datetime.now())
+        user = self.request.remote_ip
+        with open(self.active, mode='a') as f:
+            f.write('\t'.join([date, user, flag, original, text]) + '\n')
+
+    def _twitter_active(self):
+        """Select tweets for use in active learning."""
+        # Get a sample of recent tweets.
+        twitter_results = self.twitter.search(q='since:1970-01-02',
+                                              rpp=self.count,
+                                              result_type='recent',
+                                              lang='en')
+        # Classify each tweet.
+        results = []
+        for tweet in twitter_results:
+            features = self.extract(normalize_text(tweet.text))
+            label, probability = self.predict(features)
+            results.append((tweet, features, label, probability))
+        # Filter to get the most uncertain documents.
+        results.sort(key=operator.itemgetter(3))  # Sort by probability.
+        results = results[:self.top]
+        # Get conditionals for use on the result page.
+        # We compute after filtering to speed up results.
+        results = [(tweet, self.get_conditionals(features), label, probability)
+                   for tweet, features, label, probability in results]
+        self._on_results(results)
+
+    def _on_results(self, results):
+        """Display the final results to the user.
+
+        Args:
+            results: List of tuples consisting of (tweet, features,
+                label, probability), where `tweet` is a Tweepy
+                `SearchResult` object.
+        """
+        self.render("active.html",
+                    results=results,
+                    color_code=color_code,
+                    git_version=self.git_version)
+
+
 class SentimentMisclassifiedHandler(SentimentRequestHandler):
     """Handles sentiment misclassification reports.
 
@@ -348,6 +453,7 @@ def start_server(config, twitter, git_version):
     application = tornado.web.Application(
         [(r"/", MainHandler),
          (r"/sentiment/", SentimentQueryHandler),
+         (r"/sentiment/active", ActiveLearningHandler),
          (r"/sentiment/misclassified", SentimentMisclassifiedHandler),
          (r"/api/sentiment/([^/.]+).json", SentimentAPIHandler)],
         template_path=os.path.join(os.path.dirname(__file__), 'templates'),
@@ -358,6 +464,7 @@ def start_server(config, twitter, git_version):
         twitter_cache=dict(),
         twitter_cache_seconds=config.getint('web', 'twitter_cache_seconds'),
         misclassified_file=config.get('web', 'misclassified_file'),
+        active_file=config.get('web', 'active_file'),
         rpc_server=get_rpc_server(config),
         git_version=git_version)
     http_server = tornado.httpserver.HTTPServer(application, xheaders=True)

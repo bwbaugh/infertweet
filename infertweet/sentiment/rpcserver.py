@@ -49,6 +49,14 @@ def main():
             train((features, flag))
     print 'DONE'
 
+    print 'Training (pickled) classifier using active learning instances...',
+    with open(config.get('web', 'active_file')) as f:
+        for line in f:
+            date, user, flag, original, text = line.rstrip().split('\t')
+            features = extractor.extract(text)
+            train((features, flag))
+    print 'DONE'
+
     class SentimentService(rpyc.Service):
         def exposed_extract(self, document):
             return extractor.extract(document)

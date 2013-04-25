@@ -13,3 +13,5 @@ cover/
 # Project created files
 infertweet.ini
 web_log_queries*.txt
+misclassified.txt
+active-learning.txt

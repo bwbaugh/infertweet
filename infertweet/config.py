@@ -62,6 +62,7 @@ def create_default_config():
     config.set('web', 'debug', 'true')
     config.set('web', 'twitter_cache_seconds', '60')
     config.set('web', 'misclassified_file', 'misclassified.txt')
+    config.set('web', 'active_file', 'active-learning.txt')
 
     return config
 

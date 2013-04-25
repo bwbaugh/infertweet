@@ -57,7 +57,7 @@ div#result{
     color: gray;
 }
 
-form.misclassified {
+form.report {
     display: inline-block;
 }
 
