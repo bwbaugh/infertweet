@@ -65,6 +65,9 @@ def main():
         def exposed_polarity_conditional(self, feature, label):
             return polarity.conditional(feature, label)
 
+        def exposed_train(self, *documents):
+            train(*documents)
+
     rpc_port = int(config.get('sentiment', 'rpc_port'))
     t = ThreadedServer(SentimentService, port=rpc_port)
     t.start()

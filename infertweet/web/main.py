@@ -46,6 +46,7 @@ class SentimentRequestHandler(MainHandler):
         self.subjective_conditional = self.rpc.root.subjective_conditional
         self.polarity_classify = self.rpc.root.polarity_classify
         self.polarity_conditional = self.rpc.root.polarity_conditional
+        self.train = self.rpc.root.train
 
     def predict(self, features):
         """Use the classifier to predict sentiment."""
@@ -201,17 +202,22 @@ class SentimentMisclassifiedHandler(SentimentRequestHandler):
         flag = self.get_argument('flag').lower()
 
         # Classify the text to get the currently assigned label.
-        text, features, label, probability = self.process_query(text)
+        features = self.extract(text)
+        label, probability = self.predict(features)
         if flag == label:  # A valid flag can't be the current label.
             raise tornado.web.HTTPError(409)  # 409 Conflict
+
+        # Log the report.
+        self._log_misclassified(flag, label, text)
+
+        # Update the online classifier using this new example.
+        self.train((features, flag))
 
         self.render("misclassified.html",
                     text=text,
                     flag=flag,
                     color_code=color_code,
                     git_version=self.git_version)
-
-        self._log_misclassified(flag, label, text)
 
     def _log_misclassified(self, flag, mislabel, text):
         """Log misclassification to a file.
