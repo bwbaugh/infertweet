@@ -15,6 +15,7 @@ import rpyc
 import tornado.ioloop
 import tornado.web
 import tornado.httpserver
+import tweepy
 from unidecode import unidecode
 
 from infertweet.config import get_config
@@ -168,12 +169,16 @@ class SentimentQueryHandler(SentimentRequestHandler):
         if self.query in self.twitter_cache:
             cache_time, twitter_results = self.twitter_cache[self.query]
         else:
-            twitter_results = self.twitter.search(q=self.query,
-                                                  rpp=self.count,
-                                                  result_type=self.result_type,
-                                                  lang='en')
-            cache_time = datetime.datetime.now()
-            self.twitter_cache[self.query] = (cache_time, twitter_results)
+            try:
+                twitter_results = self.twitter.search(q=self.query,
+                                                      rpp=self.count,
+                                                      result_type=self.result_type,
+                                                      lang='en')
+            except tweepy.error.TweepError:
+                twitter_results = []
+            else:
+                cache_time = datetime.datetime.now()
+                self.twitter_cache[self.query] = (cache_time, twitter_results)
         self._process_twitter(twitter_results)
 
     def _process_twitter(self, twitter_results):
