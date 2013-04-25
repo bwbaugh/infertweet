@@ -32,6 +32,23 @@ def main():
     subjective = sentiment_classifier[1]
     polarity = sentiment_classifier[2]
 
+    def train(*documents):
+        for document, label in documents:
+            if label != 'neutral':
+                assert label in set(['positive', 'negative'])
+                polarity.train((document, label))
+                label = 'subjective'
+            assert label in set(['neutral', 'subjective'])
+            subjective.train((document, label))
+
+    print 'Training (pickled) classifier using misclassified instances...',
+    with open(config.get('web', 'misclassified_file')) as f:
+        for line in f:
+            date, user, flag, mislabel, text = line.rstrip().split('\t')
+            features = extractor.extract(text)
+            train((features, flag))
+    print 'DONE'
+
     class SentimentService(rpyc.Service):
         def exposed_extract(self, document):
             return extractor.extract(document)
