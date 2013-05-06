@@ -118,6 +118,9 @@ class SentimentQueryHandler(SentimentRequestHandler):
                 match the keywords in `q`. If specified, the
                 `q`-parameter is forced to be interpreted as keywords.
                 Maximum value is 100, defaults to 50.
+            geo: If present will cause only geocoded tweets to appear in
+                the results. Will cause `count` to be set to maximum.
+                (default False)
             result_type: String specifying what type of search result
                 you would prefer to receive. Must be one of either
                 'mixed', 'recent' or 'popular'. (default 'recent')
@@ -128,6 +131,7 @@ class SentimentQueryHandler(SentimentRequestHandler):
         """
         self.query = normalize_text(self.get_argument('q'))
         self.count = self.get_argument('count', default=None)
+        self.geo = self.get_argument('geo', default=False)
         self.result_type = self.get_argument('result_type', default='recent')
         self.sort = self.get_argument('sort', default=False)
 
@@ -141,6 +145,8 @@ class SentimentQueryHandler(SentimentRequestHandler):
                 raise tornado.web.HTTPError(400, 'count argument not an integer')
         if self.result_type not in set(['mixed', 'recent', 'popular']):
             raise tornado.web.HTTPError(400, 'Invalid value for result_type')
+        if self.geo:
+            self.count = 100
 
         # Send to Twitter or classify as is.
         if self.count or (len(self.query.split()) <= 4 and
@@ -165,15 +171,34 @@ class SentimentQueryHandler(SentimentRequestHandler):
 
     def _twitter_search(self):
         """Get matching tweets from Twitter."""
+        locations = ['38.0000,-97.0000,2500km',  # US
+                     '47.0000,8.0000,2500km']  # Europe
         self._twitter_cache_update()
         if self.query in self.twitter_cache:
             cache_time, twitter_results = self.twitter_cache[self.query]
         else:
+            twitter_results = []
             try:
-                twitter_results = self.twitter.search(q=self.query,
-                                                      rpp=self.count,
-                                                      result_type=self.result_type,
-                                                      lang='en')
+                if self.geo:
+                    for geocode in locations:
+                        search_results = self.twitter.search(
+                            q=self.query,
+                            rpp=self.count,
+                            result_type=self.result_type,
+                            geocode=geocode,
+                            lang='en')
+                        for tweet in search_results:
+                            try:
+                                tweet.geo['coordinates']
+                            except TypeError:
+                                continue
+                            twitter_results.append(tweet)
+                else:
+                    twitter_results.extend(self.twitter.search(
+                        q=self.query,
+                        rpp=self.count,
+                        result_type=self.result_type,
+                        lang='en'))
             except tweepy.error.TweepError:
                 twitter_results = []
             else:
@@ -206,6 +231,7 @@ class SentimentQueryHandler(SentimentRequestHandler):
                     query=self.query,
                     results=results,
                     tweets=self.tweets,
+                    geo=self.geo,
                     overall_count=collections.Counter(x[2] for x in results),
                     color_code=color_code,
                     git_version=self.git_version)
