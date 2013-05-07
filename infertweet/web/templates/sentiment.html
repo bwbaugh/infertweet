@@ -9,6 +9,8 @@ InferTweet | Sentiment
   <input type="text" id="query" name="q" autofocus="autofocus"
          value="{{ query }}">
   <input type="submit" value="Estimate Tone">
+  <label for="geo">Geo analysis:</label>
+  <input type="checkbox" id="geo" name="geo" value="1" {%if geo %}checked{% end %}>
 </form>
 <section id="query">
   <h1>Query:</h1>
