@@ -232,7 +232,7 @@ class SentimentQueryHandler(SentimentRequestHandler):
                 location = tweet.geo['coordinates']
                 country = estimated_country(*location)
                 if label == 'negative':
-                    probability *= -1
+                    probability = 1 - probability
                 elif label == 'neutral':
                     continue
                 country_geo[country].append(probability)
