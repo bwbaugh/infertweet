@@ -175,8 +175,9 @@ class SentimentQueryHandler(SentimentRequestHandler):
         locations = ['38.0000,-97.0000,3000km',  # US
                      '47.0000,8.0000,3000km']  # Europe
         self._twitter_cache_update()
-        if self.query in self.twitter_cache:
-            cache_time, twitter_results = self.twitter_cache[self.query]
+        key = self.query, self.geo
+        if key in self.twitter_cache:
+            cache_time, twitter_results = self.twitter_cache[key]
         else:
             twitter_results = []
             try:
@@ -206,7 +207,7 @@ class SentimentQueryHandler(SentimentRequestHandler):
                 twitter_results = []
             else:
                 cache_time = datetime.datetime.now()
-                self.twitter_cache[self.query] = (cache_time, twitter_results)
+                self.twitter_cache[key] = (cache_time, twitter_results)
         self._process_twitter(twitter_results)
 
     def _process_twitter(self, twitter_results):
