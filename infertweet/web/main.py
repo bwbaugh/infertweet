@@ -119,6 +119,8 @@ class SentimentQueryHandler(SentimentRequestHandler):
                 match the keywords in `q`. If specified, the
                 `q`-parameter is forced to be interpreted as keywords.
                 Maximum value is 100, defaults to 50.
+            as_is: If present will force classification of the query
+                without getting any data from Twitter.
             geo: If present will cause only geocoded tweets to appear in
                 the results. Will cause `count` to be set to maximum.
                 (default False)
@@ -132,6 +134,7 @@ class SentimentQueryHandler(SentimentRequestHandler):
         """
         self.query = normalize_text(self.get_argument('q'))
         self.count = self.get_argument('count', default=None)
+        self.as_is = self.get_argument('as_is', default=False)
         self.geo = self.get_argument('geo', default=False)
         self.result_type = self.get_argument('result_type', default='recent')
         self.sort = self.get_argument('sort', default=False)
@@ -148,10 +151,12 @@ class SentimentQueryHandler(SentimentRequestHandler):
             raise tornado.web.HTTPError(400, 'Invalid value for result_type')
         if self.geo:
             self.count = 100
+        if self.as_is:
+            self.geo = self.count = None
 
         # Send to Twitter or classify as is.
-        if self.count or (len(self.query.split()) <= 4 and
-                          len(self.query) <= 30):
+        if not self.as_is and (self.count or (len(self.query.split()) <= 4 and
+                               len(self.query) <= 30)):
             self.tweets = True
             if self.count is None:
                 self.count = 50
@@ -248,6 +253,7 @@ class SentimentQueryHandler(SentimentRequestHandler):
                     query=self.query,
                     results=results,
                     tweets=self.tweets,
+                    as_is=self.as_is,
                     geo=self.geo,
                     estimated_country=estimated_country,
                     overall_count=collections.Counter(x[2] for x in results),
