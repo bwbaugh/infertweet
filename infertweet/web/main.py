@@ -172,8 +172,8 @@ class SentimentQueryHandler(SentimentRequestHandler):
 
     def _twitter_search(self):
         """Get matching tweets from Twitter."""
-        locations = ['38.0000,-97.0000,2500km',  # US
-                     '47.0000,8.0000,2500km']  # Europe
+        locations = ['38.0000,-97.0000,3000km',  # US
+                     '47.0000,8.0000,3000km']  # Europe
         self._twitter_cache_update()
         if self.query in self.twitter_cache:
             cache_time, twitter_results = self.twitter_cache[self.query]
@@ -181,19 +181,21 @@ class SentimentQueryHandler(SentimentRequestHandler):
             twitter_results = []
             try:
                 if self.geo:
-                    for geocode in locations:
-                        search_results = self.twitter.search(
-                            q=self.query,
-                            rpp=self.count,
-                            result_type=self.result_type,
-                            geocode=geocode,
-                            lang='en')
-                        for tweet in search_results:
-                            try:
-                                tweet.geo['coordinates']
-                            except TypeError:
-                                continue
-                            twitter_results.append(tweet)
+                    for page in range(1, 3 + 1):
+                        for geocode in locations:
+                            search_results = self.twitter.search(
+                                q=self.query,
+                                rpp=self.count,
+                                result_type=self.result_type,
+                                page=page,
+                                geocode=geocode,
+                                lang='en')
+                            for tweet in search_results:
+                                try:
+                                    tweet.geo['coordinates']
+                                except TypeError:
+                                    continue
+                                twitter_results.append(tweet)
                 else:
                     twitter_results.extend(self.twitter.search(
                         q=self.query,
