@@ -115,15 +115,17 @@ class SentimentQueryHandler(SentimentRequestHandler):
                 keywords, the query must be 4 words or less and must be
                 less than 30 characters, otherwise the string is assumed
                 to be a single document.
-            count: The number of tweets to request from Twitter that
-                match the keywords in `q`. If specified, the
-                `q`-parameter is forced to be interpreted as keywords.
-                Maximum value is 100, defaults to 50.
             as_is: If present will force classification of the query
                 without getting any data from Twitter.
             geo: If present will cause only geocoded tweets to appear in
                 the results. Will cause `count` to be set to maximum.
                 (default False)
+            count: The number of tweets to request from Twitter that
+                match the keywords in `q`. If specified, the
+                `q`-parameter is forced to be interpreted as keywords.
+                (default 50, maximum 100) However, if `geo` is
+                specified, count represents the number of result pages
+                to retrieve from Twitter. (default 3)
             result_type: String specifying what type of search result
                 you would prefer to receive. Must be one of either
                 'mixed', 'recent' or 'popular'. (default 'recent')
@@ -150,7 +152,8 @@ class SentimentQueryHandler(SentimentRequestHandler):
         if self.result_type not in set(['mixed', 'recent', 'popular']):
             raise tornado.web.HTTPError(400, 'Invalid value for result_type')
         if self.geo:
-            self.count = 100
+            if self.count is None:
+                self.count = 3
         if self.as_is:
             self.geo = self.count = None
 
@@ -187,11 +190,11 @@ class SentimentQueryHandler(SentimentRequestHandler):
             twitter_results = []
             try:
                 if self.geo:
-                    for page in range(1, 3 + 1):
+                    for page in range(1, self.count + 1):
                         for geocode in locations:
                             search_results = self.twitter.search(
                                 q=self.query,
-                                rpp=self.count,
+                                rpp=100,
                                 result_type=self.result_type,
                                 page=page,
                                 geocode=geocode,
