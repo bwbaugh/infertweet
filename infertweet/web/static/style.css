@@ -29,10 +29,17 @@ div#stats{
 }
 
 div#chart_overall_count {
-    background-color: darkgray;
+    background-color: lightgray;
     padding: 1em;
     width: 500px;
     height: 300px;
+}
+
+div#chart_geo {
+    background-color: lightgray;
+    padding: 1em;
+    width: 900px;
+    height: 500px;
 }
 
 div#result{

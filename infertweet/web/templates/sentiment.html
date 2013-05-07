@@ -19,6 +19,10 @@ InferTweet | Sentiment
   <div id='stats'>
     <h1>Overall Statistics:</h1>
     <div id='chart_overall_count'></div>
+    {% if geo %}
+    <h1>Geo Sentiment:<h1>
+    <div id='chart_geo'></div>
+    {% end %}
   </div>
   {% end %}
   {% for result in results %}
@@ -106,5 +110,28 @@ InferTweet | Sentiment
     chart.draw(data, options);
   }
 </script>
+{% if geo %}
+<script type='text/javascript'>
+ google.load('visualization', '1', {'packages': ['geochart']});
+ google.setOnLoadCallback(drawRegionsMap);
+
+  function drawRegionsMap() {
+    var data = google.visualization.arrayToDataTable([
+      ['Country', 'Sentiment (average)'],
+      {% for country in geo %}
+      ['{{ country }}', {{ round(sum(geo[country]) / len(geo[country]), 3) }}],
+      {% end %}
+    ]);
+
+    var options = {colorAxis: {minValue: -1,
+                               maxValue: 1,
+                               colors: ['red', 'gray', 'green']},
+                   };
+
+    var chart = new google.visualization.GeoChart(document.getElementById('chart_geo'));
+    chart.draw(data, options);
+};
+</script>
+{% end %}
 {% end %}
 {% end %}

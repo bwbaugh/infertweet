@@ -19,6 +19,7 @@ import tweepy
 from unidecode import unidecode
 
 from infertweet.config import get_config
+from infertweet.country import estimated_country
 from infertweet.twitter import Twitter
 
 
@@ -209,13 +210,26 @@ class SentimentQueryHandler(SentimentRequestHandler):
     def _process_twitter(self, twitter_results):
         """Classify each tweet returned by Twitter."""
         results = []
+        if self.geo:
+            country_geo = collections.defaultdict(list)
         for tweet in twitter_results:
             result = self.process_query(normalize_text(tweet.text))
             result = (tweet, ) + result[1:]
             results.append(result)
+            if self.geo:
+                label, probability = result[2], result[3]
+                location = tweet.geo['coordinates']
+                country = estimated_country(*location)
+                if label == 'negative':
+                    probability *= -1
+                elif label == 'neutral':
+                    probability = 0
+                country_geo[country].append(probability)
         if self.sort:
             order = self.sort != 'ascending'  # Default descending.
             results.sort(key=operator.itemgetter(3), reverse=order)
+        if self.geo:
+            self.geo = country_geo
         self._on_results(results)
 
     def _on_results(self, results):
@@ -232,6 +246,7 @@ class SentimentQueryHandler(SentimentRequestHandler):
                     results=results,
                     tweets=self.tweets,
                     geo=self.geo,
+                    estimated_country=estimated_country,
                     overall_count=collections.Counter(x[2] for x in results),
                     color_code=color_code,
                     git_version=self.git_version)
