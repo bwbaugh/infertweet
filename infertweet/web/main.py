@@ -234,7 +234,7 @@ class SentimentQueryHandler(SentimentRequestHandler):
                 if label == 'negative':
                     probability *= -1
                 elif label == 'neutral':
-                    probability = 0
+                    continue
                 country_geo[country].append(probability)
         if self.sort:
             order = self.sort != 'ascending'  # Default descending.

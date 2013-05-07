@@ -24,7 +24,7 @@ InferTweet | Sentiment
     <h1>Overall Statistics:</h1>
     <div id='chart_overall_count'></div>
     {% if geo %}
-    <h1>Geo Sentiment:<h1>
+    <h1>Geo Subjectivity:<h1>
     <div id='chart_geo'></div>
     {% end %}
   </div>
@@ -121,7 +121,7 @@ InferTweet | Sentiment
 
   function drawRegionsMap() {
     var data = google.visualization.arrayToDataTable([
-      ['Country', 'Sentiment (average)'],
+      ['Country', 'Subjectivity (average)'],
       {% for country in geo %}
       ['{{ country }}', {{ round(sum(geo[country]) / len(geo[country]), 3) }}],
       {% end %}
@@ -129,7 +129,7 @@ InferTweet | Sentiment
 
     var options = {colorAxis: {minValue: -1,
                                maxValue: 1,
-                               colors: ['red', 'gray', 'green']},
+                               colors: ['red', 'lightblue', 'green']},
                    };
 
     var chart = new google.visualization.GeoChart(document.getElementById('chart_geo'));
