@@ -10,6 +10,9 @@ dist/
 .coverage
 cover/
 
+# Generated documentation
+docs/
+
 # Project created files
 infertweet.ini
 web_log_queries*.txt
