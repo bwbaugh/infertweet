@@ -77,6 +77,8 @@ then the web interface files under `web/static` and `web/templates` are
 not copied along with the installation. Therefore, either copy these
 files manually or run from the source directory.
 
+To start the server, run: `python -m infertweet.web.main`
+
 ### RESTful JSON API
 
 #### GET sentiment/classify
