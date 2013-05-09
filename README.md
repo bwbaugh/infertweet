@@ -72,6 +72,11 @@ application that depends on the classifier needs to restart or update.
 We have added a very simple web interface that allows users to query the
 system. Lots of upcoming features are planned for the web interface.
 
+**Known Bug:** If installing the package through `pip` or `setup.py`
+then the web interface files under `web/static` and `web/templates` are
+not copied along with the installation. Therefore, either copy these
+files manually or run from the source directory.
+
 ### RESTful JSON API
 
 #### GET sentiment/classify
