@@ -5,7 +5,7 @@ from setuptools.command.install import install
 
 
 PROGRAM_NAME = 'infertweet'
-VERSION = '0.2'
+VERSION = '0.3'
 DESCRIPTION = ('Infer information from Tweets. Useful for human-centered '
                'computing tasks, such as sentiment analysis, location '
                'prediction, authorship profiling and more!')
