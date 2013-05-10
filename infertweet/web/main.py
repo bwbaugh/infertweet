@@ -54,11 +54,13 @@ class SentimentRequestHandler(MainHandler):
 
     def predict(self, features):
         """Use the classifier to predict sentiment."""
-        label, probability = self.subjective_classify(features)
+        label, subjective_probability = self.subjective_classify(features)
         if label == 'neutral':
-            return label, probability
+            return label, subjective_probability
         else:
-            return self.polarity_classify(features)
+            label, probability = self.polarity_classify(features)
+            probability *= subjective_probability
+            return label, probability
 
     def conditional(self, feature):
         """Get the contribution of an individual feature."""
@@ -353,19 +355,15 @@ class ActiveLearningHandler(SentimentQueryHandler):
         results = []
         for tweet in twitter_results:
             features = self.extract(normalize_text(tweet.text))
-            label, probability = self.subjective_classify(features)
-            s_prob = probability
-            if label != 'neutral':
-                label, probability = self.polarity_classify(features)
-            results.append((tweet, features, label, probability, s_prob))
+            label, probability = self.predict(features)
+            results.append((tweet, features, label, probability))
         # Filter to get the most uncertain documents.
-        # Sort by lowest probability of subjective or polarity.
-        results.sort(key=lambda tup: min(tup[3], tup[4]))
+        results.sort(key=operator.itemgetter(3))  # Sort by probability.
         results = results[:self.top]
         # Get conditionals for use on the result page.
         # We compute after filtering to speed up results.
         results = [(tweet, self.get_conditionals(features), label, probability)
-                   for tweet, features, label, probability, s_prob in results]
+                   for tweet, features, label, probability in results]
         self._on_results(results)
 
     def _on_results(self, results):
